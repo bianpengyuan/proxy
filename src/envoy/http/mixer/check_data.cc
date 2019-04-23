@@ -76,6 +76,11 @@ std::map<std::string, std::string> CheckData::GetRequestHeaders() const {
   return header_map;
 }
 
+void CheckData::GetNewRequestHeaders(std::unorderedmap<std::string, std::string>& new_headers,
+  const ::google::protobuf::Map<std::string, std::string>& existed_headers) const {
+  Utils::ExtractNewHeaders(headers_, RequestHeaderExclusives, new_headers, existed_headers);
+}
+
 bool CheckData::IsMutualTLS() const { return Utils::IsMutualTLS(connection_); }
 
 bool CheckData::GetRequestedServerName(std::string* name) const {

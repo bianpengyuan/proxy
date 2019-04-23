@@ -35,6 +35,16 @@ const std::set<std::string> kGrpcContentTypes{
 
 }  // namespace
 
+void AttributesBuilder::ExtractNewRequestHeaderAttributes(CheckData *check_data) {
+  // Add a lambda here so that no map are needed.
+  std::unordered_map<string, string> new_headers;
+  const auto& entries = (*attributes_->mutable_attributes())[kRequestHeaders].string_map_value().entries();
+  GetNewRequestHeaders(new_headers, entries);
+  for (auto& kv : new_headers) {
+    builder.InsertToStringMap();
+  }
+}
+
 void AttributesBuilder::ExtractRequestHeaderAttributes(CheckData *check_data) {
   utils::AttributesBuilder builder(attributes_);
   std::map<std::string, std::string> headers = check_data->GetRequestHeaders();

@@ -55,6 +55,8 @@ class RequestHandlerImpl : public RequestHandler {
   istio::mixerclient::SharedAttributesSharedPtr attributes_;
   istio::mixerclient::CheckContextSharedPtr check_context_;
 
+  unordered_map<string, string> check_request_headers_;
+
   // The service context.
   std::shared_ptr<ServiceContext> service_context_;
 

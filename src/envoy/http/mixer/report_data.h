@@ -52,22 +52,25 @@ bool ExtractGrpcStatus(const HeaderMap *headers,
 
 class ReportData : public ::istio::control::http::ReportData,
                    public Logger::Loggable<Logger::Id::filter> {
-  const HeaderMap *headers_;
+  const HeaderMap *request_headers_;
+  const HeaderMap *response_headers_;
   const HeaderMap *trailers_;
   const StreamInfo::StreamInfo &info_;
   uint64_t response_total_size_;
   uint64_t request_total_size_;
 
  public:
-  ReportData(const HeaderMap *headers, const HeaderMap *response_trailers,
+  ReportData(const HeaderMap *request_headers, const HeaderMap *response_headers,
+             const HeaderMap *response_trailers,
              const StreamInfo::StreamInfo &info, uint64_t request_total_size)
-      : headers_(headers),
+      : request_headers_(request_headers),
+        response_headers_(response_headers),
         trailers_(response_trailers),
         info_(info),
         response_total_size_(info.bytesSent()),
         request_total_size_(request_total_size) {
-    if (headers != nullptr) {
-      response_total_size_ += headers->byteSize();
+    if (request_headers != nullptr) {
+      response_total_size_ += request_headers->byteSize();
     }
     if (response_trailers != nullptr) {
       response_total_size_ += response_trailers->byteSize();
@@ -84,6 +87,14 @@ class ReportData : public ::istio::control::http::ReportData,
     }
     return header_map;
   }
+
+  // void GetNewRequestHeaders(std::map<std::string, std::string>& new_request_header) const override {
+  //   std::map<std::string, std::string> header_map;
+  //   if (headers_) {
+  //     Utils::ExtractHeaders(*headers_, ResponseHeaderExclusives, header_map);
+  //   }
+  //   return header_map;
+  // }
 
   void GetReportInfo(
       ::istio::control::http::ReportData::ReportInfo *data) const override {

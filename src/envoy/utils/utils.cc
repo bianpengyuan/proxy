@@ -59,6 +59,31 @@ void ExtractHeaders(const Http::HeaderMap& header_map,
       &ctx);
 }
 
+void ExtractNewHeaders(const Http::HeaderMap&  headers, 
+const std::set<std::string>& exclusives, std::unordered_map<std::string, std::string>&new_headers, 
+const ::google::protobuf::Map<std::string, std::string>& existed_headers) {
+  struct Context {
+    Context(const std::set<std::string>& exclusives,
+            std::map<std::string, std::string>& headers)
+        : exclusives(exclusives), headers(headers) {}
+    const std::set<std::string>& exclusives;
+    std::unordered_map<std::string, std::string>& headers;
+    const ::google::protobuf::Map<std::string, std::string>& existed_headers;
+  };
+  Context ctx(exclusives, headers);
+  header_map.iterate(
+      [](const Http::HeaderEntry& header,
+         void* context) -> Http::HeaderMap::Iterate {
+        Context* ctx = static_cast<Context*>(context);
+        if (ctx->exclusives.count(header.key().c_str()) == 0 &&
+            ctx->existed_headers.find(header.key().c_str()) != ctx->existed_headers.end()) {
+          ctx->headers[header.key().c_str()] = header.value().c_str();
+        }
+        return Http::HeaderMap::Iterate::Continue;
+      },
+      &ctx);
+}
+
 bool GetIpPort(const Network::Address::Ip* ip, std::string* str_ip, int* port) {
   if (ip) {
     *port = ip->port();
