@@ -15,30 +15,30 @@
 ################################################################################
 #
 
-package(default_visibility = ["//visibility:public"])
-
 load(
     "@envoy//bazel:envoy_build_system.bzl",
     "envoy_cc_library",
 )
 
 envoy_cc_library(
-    name = "stackdriver_plugin",
+    name = "metric",
     srcs = [
-        "stackdriver.cc",
-        "stackdriver_plugin_factory.cc",
+        "recorder.cc",
+        "registry.cc",
     ],
     hdrs = [
-        "stackdriver.h",
-    ],
-    copts = [
-        "-DNULL_PLUGIN=1",
+        "registry.h",
+        "recorder.h",
     ],
     repository = "@envoy",
+    visibility = [
+        "//extensions/stackdriver:__pkg__",
+    ],
     deps = [
         "//extensions/stackdriver/config:stackdriver_plugin_config_proto_cc",
-        "//extensions/stackdriver/metric:metric",
         "//extensions/stackdriver/common:context",
         "@envoy//source/extensions/common/wasm/null:null_lib",
-    ],
+        "@io_opencensus_cpp//opencensus/stats:stats",
+        "@io_opencensus_cpp//opencensus/exporters/stats/stackdriver:stackdriver_exporter",
+    ]
 )

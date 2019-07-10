@@ -19,26 +19,10 @@ package(default_visibility = ["//visibility:public"])
 
 load(
     "@envoy//bazel:envoy_build_system.bzl",
-    "envoy_cc_library",
+    "envoy_proto_library",
 )
 
-envoy_cc_library(
-    name = "stackdriver_plugin",
-    srcs = [
-        "stackdriver.cc",
-        "stackdriver_plugin_factory.cc",
-    ],
-    hdrs = [
-        "stackdriver.h",
-    ],
-    copts = [
-        "-DNULL_PLUGIN=1",
-    ],
-    repository = "@envoy",
-    deps = [
-        "//extensions/stackdriver/config:stackdriver_plugin_config_proto_cc",
-        "//extensions/stackdriver/metric:metric",
-        "//extensions/stackdriver/common:context",
-        "@envoy//source/extensions/common/wasm/null:null_lib",
-    ],
+envoy_proto_library(
+    name = "stackdriver_plugin_config_proto",
+    srcs = ["stackdriver_plugin_config.proto"],
 )

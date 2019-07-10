@@ -14,31 +14,23 @@
 #
 ################################################################################
 #
-
-package(default_visibility = ["//visibility:public"])
-
 load(
     "@envoy//bazel:envoy_build_system.bzl",
     "envoy_cc_library",
 )
 
+package(default_visibility = ["//visibility:public"])
+
 envoy_cc_library(
-    name = "stackdriver_plugin",
+    name = "context",
     srcs = [
-        "stackdriver.cc",
-        "stackdriver_plugin_factory.cc",
+        "context.cc",
     ],
     hdrs = [
-        "stackdriver.h",
-    ],
-    copts = [
-        "-DNULL_PLUGIN=1",
+        "context.h",
     ],
     repository = "@envoy",
     deps = [
-        "//extensions/stackdriver/config:stackdriver_plugin_config_proto_cc",
-        "//extensions/stackdriver/metric:metric",
-        "//extensions/stackdriver/common:context",
-        "@envoy//source/extensions/common/wasm/null:null_lib",
+        "@envoy//source/exe:envoy_common_lib",
     ],
 )

@@ -22,10 +22,6 @@ load(
     "googletest_repositories",
     "mixerapi_dependencies",
 )
-load(
-    "//extensions/stackdriver:opencensus/opencensus.bzl",
-    "io_opencensus_cpp",
-)
 
 googletest_repositories()
 
@@ -86,7 +82,3 @@ load("@io_bazel_rules_go//go:deps.bzl", "go_register_toolchains", "go_rules_depe
 go_rules_dependencies()
 
 go_register_toolchains(go_version = GO_VERSION)
-
-# TODO(bianpengyuan): remove this when https://github.com/census-instrumentation/opencensus-cpp/issues/334
-# is fixed and merged into upstream.
-io_opencensus_cpp()
