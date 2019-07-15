@@ -100,10 +100,13 @@ void StackdriverContext::onCreate() {
 FilterHeadersStatus StackdriverContext::onRequestHeaders() {
   request_info_.request_protocol = getProtocol(StreamType::Request)->toString();
   request_info_.destination_service_host =
-      getHeaderMapValue(HeaderMapType::RequestHeaders, ":authority")
+      getHeaderMapValue(HeaderMapType::RequestHeaders,
+                        ::Stackdriver::Common::kAuthorityHeaderKey)
           ->toString();
   request_info_.request_operation =
-      getHeaderMapValue(HeaderMapType::RequestHeaders, ":method")->toString();
+      getHeaderMapValue(HeaderMapType::RequestHeaders,
+                        ::Stackdriver::Common::kMethodHeaderKey)
+          ->toString();
   // TODO: If this is an inbound listener, get peer node metadata
   return FilterHeadersStatus::Continue;
 }

@@ -31,8 +31,8 @@ cc_library(
     ],
     deps = [
         ":constants",
-        "@com_google_protobuf//:protobuf"
-    ]
+        "@com_google_protobuf//:protobuf",
+    ],
 )
 
 cc_library(

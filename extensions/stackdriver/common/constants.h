@@ -68,5 +68,9 @@ constexpr char kMetadataNamespaceKey[] = "namespace";
 constexpr char kMetadataOwnerKey[] = "owner";
 constexpr char kMetadataWorkloadNameKey[] = "workload_name";
 
+// Header keys
+constexpr char kAuthorityHeaderKey[] = ":authority";
+constexpr char kMethodHeaderKey[] = ":method";
+
 }  // namespace Common
 }  // namespace Stackdriver
