@@ -15,12 +15,9 @@
 ################################################################################
 #
 
-load(
-    "@envoy//bazel:envoy_build_system.bzl",
-    "envoy_cc_library",
-)
+licenses(["notice"])
 
-envoy_cc_library(
+cc_library(
     name = "metric",
     srcs = [
         "recorder.cc",
@@ -30,15 +27,33 @@ envoy_cc_library(
         "registry.h",
         "recorder.h",
     ],
-    repository = "@envoy",
     visibility = [
         "//extensions/stackdriver:__pkg__",
     ],
     deps = [
+        ":constants",
         "//extensions/stackdriver/config:stackdriver_plugin_config_proto_cc",
         "//extensions/stackdriver/common:context",
         "@envoy//source/extensions/common/wasm/null:null_lib",
         "@io_opencensus_cpp//opencensus/stats:stats",
         "@io_opencensus_cpp//opencensus/exporters/stats/stackdriver:stackdriver_exporter",
     ]
+)
+
+cc_library(
+    name = "constants",
+    hdrs = [
+        "constants.h",
+    ],
+    visibility = [
+        "//extensions/stackdriver/metric:__pkg__",
+    ],
+)
+
+cc_test(
+    name = "registry_test",
+    srcs = ["registry_test.cc"],
+    deps = [
+        ":metric",
+    ],
 )
