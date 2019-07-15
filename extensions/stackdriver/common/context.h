@@ -15,9 +15,10 @@
 
 #pragma once
 
-#include <google/protobuf/struct.pb.h>
 #include <string>
 #include <unordered_map>
+
+#include "google/protobuf/struct.pb.h"
 
 namespace Stackdriver {
 namespace Common {

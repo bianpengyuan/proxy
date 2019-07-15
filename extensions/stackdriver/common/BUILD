@@ -14,14 +14,10 @@
 #
 ################################################################################
 #
-load(
-    "@envoy//bazel:envoy_build_system.bzl",
-    "envoy_cc_library",
-)
 
-package(default_visibility = ["//visibility:public"])
+licenses(["notice"])
 
-envoy_cc_library(
+cc_library(
     name = "context",
     srcs = [
         "context.cc",
@@ -29,8 +25,8 @@ envoy_cc_library(
     hdrs = [
         "context.h",
     ],
-    repository = "@envoy",
-    deps = [
-        "@envoy//source/exe:envoy_common_lib",
+    visibility = [
+        "//extensions/stackdriver:__pkg__",
+        "//extensions/stackdriver/metric:__pkg__",
     ],
 )

@@ -34,7 +34,6 @@ cc_library(
         ":constants",
         "//extensions/stackdriver/common:context",
         "//extensions/stackdriver/config:stackdriver_plugin_config_proto_cc",
-        "@envoy//source/extensions/common/wasm/null:null_lib",
         "@io_opencensus_cpp//opencensus/exporters/stats/stackdriver:stackdriver_exporter",
         "@io_opencensus_cpp//opencensus/stats",
     ],
