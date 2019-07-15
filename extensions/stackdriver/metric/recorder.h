@@ -23,7 +23,7 @@ namespace Stackdriver {
 namespace Metric {
 
 class Recorder {
-public:
+ public:
   Recorder(stackdriver::config::PluginConfig::ReporterKind kind) {
     kind_ = kind;
   }
@@ -32,9 +32,9 @@ public:
   void Record(const ::Stackdriver::Common::NodeInfo &local_node_info,
               const ::Stackdriver::Common::RequestInfo &request_info);
 
-private:
+ private:
   stackdriver::config::PluginConfig::ReporterKind kind_;
 };
 
-} // namespace Metric
-} // namespace Stackdriver
+}  // namespace Metric
+}  // namespace Stackdriver

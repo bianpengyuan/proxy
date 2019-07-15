@@ -13,15 +13,15 @@
  * limitations under the License.
  */
 
-#include "extensions/stackdriver/metric/constants.h"
 #include "extensions/stackdriver/metric/registry.h"
+#include "extensions/stackdriver/metric/constants.h"
 #include "google/api/monitored_resource.pb.h"
 
 namespace Stackdriver {
 namespace Metric {
 
-opencensus::exporters::stats::StackdriverOptions
-GetStackdriverOptions(const Stackdriver::Common::NodeInfo &local_node_info) {
+opencensus::exporters::stats::StackdriverOptions GetStackdriverOptions(
+    const Stackdriver::Common::NodeInfo &local_node_info) {
   opencensus::exporters::stats::StackdriverOptions options;
   options.project_id = local_node_info.project_id;
 
@@ -61,47 +61,47 @@ GetStackdriverOptions(const Stackdriver::Common::NodeInfo &local_node_info) {
 /*
  *  macros to register views
  */
-#define REGISTER_COUNT_VIEW(_v)                                                \
-  void Register##_v##View() {                                                  \
-    const opencensus::stats::ViewDescriptor view_descriptor =                  \
-        opencensus::stats::ViewDescriptor()                                    \
-            .set_name(k##_v##View)                                             \
-            .set_measure(k##_v##Measure)                                       \
-            .set_aggregation(opencensus::stats::Aggregation::Count())          \
-                ADD_TAGS;                                                      \
-    opencensus::stats::View view(view_descriptor);                             \
-    view_descriptor.RegisterForExport();                                       \
+#define REGISTER_COUNT_VIEW(_v)                                       \
+  void Register##_v##View() {                                         \
+    const opencensus::stats::ViewDescriptor view_descriptor =         \
+        opencensus::stats::ViewDescriptor()                           \
+            .set_name(k##_v##View)                                    \
+            .set_measure(k##_v##Measure)                              \
+            .set_aggregation(opencensus::stats::Aggregation::Count()) \
+                ADD_TAGS;                                             \
+    opencensus::stats::View view(view_descriptor);                    \
+    view_descriptor.RegisterForExport();                              \
   }
 
-#define REGISTER_DISTRIBUTION_VIEW(_v)                                         \
-  void Register##_v##View() {                                                  \
-    const opencensus::stats::ViewDescriptor view_descriptor =                  \
-        opencensus::stats::ViewDescriptor()                                    \
-            .set_name(k##_v##View)                                             \
-            .set_measure(k##_v##Measure)                                       \
-            .set_aggregation(opencensus::stats::Aggregation::Distribution(     \
-                opencensus::stats::BucketBoundaries::Exponential(20, 1, 2)))   \
-                ADD_TAGS;                                                      \
-    opencensus::stats::View view(view_descriptor);                             \
-    view_descriptor.RegisterForExport();                                       \
+#define REGISTER_DISTRIBUTION_VIEW(_v)                                       \
+  void Register##_v##View() {                                                \
+    const opencensus::stats::ViewDescriptor view_descriptor =                \
+        opencensus::stats::ViewDescriptor()                                  \
+            .set_name(k##_v##View)                                           \
+            .set_measure(k##_v##Measure)                                     \
+            .set_aggregation(opencensus::stats::Aggregation::Distribution(   \
+                opencensus::stats::BucketBoundaries::Exponential(20, 1, 2))) \
+                ADD_TAGS;                                                    \
+    opencensus::stats::View view(view_descriptor);                           \
+    view_descriptor.RegisterForExport();                                     \
   }
 
-#define ADD_TAGS                                                               \
-  .add_column(RequestOperationKey())                                           \
-      .add_column(RequestProtocolKey())                                        \
-      .add_column(ServiceAuthenticationPolicyKey())                            \
-      .add_column(MeshUIDKey())                                                \
-      .add_column(DestinationServiceNameKey())                                 \
-      .add_column(DestinationServiceNamespaceKey())                            \
-      .add_column(DestinationPortKey())                                        \
-      .add_column(ResponseCodeKey())                                           \
-      .add_column(SourcePrincipalKey())                                        \
-      .add_column(SourceWorkloadNameKey())                                     \
-      .add_column(SourceWorkloadNamespaceKey())                                \
-      .add_column(SourceOwnerKey())                                            \
-      .add_column(DestinationPrincipalKey())                                   \
-      .add_column(DestinationWorkloadNameKey())                                \
-      .add_column(DestinationWorkloadNamespaceKey())                           \
+#define ADD_TAGS                                     \
+  .add_column(RequestOperationKey())                 \
+      .add_column(RequestProtocolKey())              \
+      .add_column(ServiceAuthenticationPolicyKey())  \
+      .add_column(MeshUIDKey())                      \
+      .add_column(DestinationServiceNameKey())       \
+      .add_column(DestinationServiceNamespaceKey())  \
+      .add_column(DestinationPortKey())              \
+      .add_column(ResponseCodeKey())                 \
+      .add_column(SourcePrincipalKey())              \
+      .add_column(SourceWorkloadNameKey())           \
+      .add_column(SourceWorkloadNamespaceKey())      \
+      .add_column(SourceOwnerKey())                  \
+      .add_column(DestinationPrincipalKey())         \
+      .add_column(DestinationWorkloadNameKey())      \
+      .add_column(DestinationWorkloadNamespaceKey()) \
       .add_column(DestinationOwnerKey())
 
 // Functions to register opencensus views to export.
@@ -128,10 +128,10 @@ void RegisterViews() {
 /*
  * tag key function macros
  */
-#define TAG_KEY_FUNC(_t, _f)                                                   \
-  opencensus::tags::TagKey _f##Key() {                                         \
-    static const auto _t##_key = opencensus::tags::TagKey::Register(#_t);      \
-    return _t##_key;                                                           \
+#define TAG_KEY_FUNC(_t, _f)                                              \
+  opencensus::tags::TagKey _f##Key() {                                    \
+    static const auto _t##_key = opencensus::tags::TagKey::Register(#_t); \
+    return _t##_key;                                                      \
   }
 
 // Tag key functions
@@ -155,11 +155,11 @@ TAG_KEY_FUNC(destination_owner, DestinationOwner)
 /*
  * measure function macros
  */
-#define MEASURE_FUNC(_m, _u, _t)                                               \
-  opencensus::stats::Measure##_t _m##Measure() {                               \
-    static const opencensus::stats::Measure##_t measure =                      \
-        opencensus::stats::Measure##_t::Register(k##_m##Measure, "", #_u);     \
-    return measure;                                                            \
+#define MEASURE_FUNC(_m, _u, _t)                                           \
+  opencensus::stats::Measure##_t _m##Measure() {                           \
+    static const opencensus::stats::Measure##_t measure =                  \
+        opencensus::stats::Measure##_t::Register(k##_m##Measure, "", #_u); \
+    return measure;                                                        \
   }
 
 // Meausre functions
@@ -172,5 +172,5 @@ MEASURE_FUNC(ClientRequestBytes, By, Int64)
 MEASURE_FUNC(ClientResponseBytes, By, Int64)
 MEASURE_FUNC(ClientRoundtripLatencies, ms, Double)
 
-} // namespace Metric
-} // namespace Stackdriver
+}  // namespace Metric
+}  // namespace Stackdriver

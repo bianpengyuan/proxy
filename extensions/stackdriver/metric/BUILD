@@ -24,20 +24,20 @@ cc_library(
         "registry.cc",
     ],
     hdrs = [
-        "registry.h",
         "recorder.h",
+        "registry.h",
     ],
     visibility = [
         "//extensions/stackdriver:__pkg__",
     ],
     deps = [
         ":constants",
-        "//extensions/stackdriver/config:stackdriver_plugin_config_proto_cc",
         "//extensions/stackdriver/common:context",
+        "//extensions/stackdriver/config:stackdriver_plugin_config_proto_cc",
         "@envoy//source/extensions/common/wasm/null:null_lib",
-        "@io_opencensus_cpp//opencensus/stats:stats",
         "@io_opencensus_cpp//opencensus/exporters/stats/stackdriver:stackdriver_exporter",
-    ]
+        "@io_opencensus_cpp//opencensus/stats",
+    ],
 )
 
 cc_library(
@@ -52,8 +52,11 @@ cc_library(
 
 cc_test(
     name = "registry_test",
+    size = "small",
     srcs = ["registry_test.cc"],
+    linkstatic = 1,
     deps = [
         ":metric",
+        "//external:googletest_main",
     ],
 )

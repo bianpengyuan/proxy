@@ -62,5 +62,5 @@ bool ExtractNodeMetadata(const google::protobuf::Value &metadata,
   return true;
 }
 
-} // namespace Common
-} // namespace Stackdriver
+}  // namespace Common
+}  // namespace Stackdriver

@@ -102,9 +102,8 @@ FilterHeadersStatus StackdriverContext::onRequestHeaders() {
   request_info_.destination_service_host =
       getHeaderMapValue(HeaderMapType::RequestHeaders, ":authority")
           ->toString();
-  request_info_.request_operation = 
-      getHeaderMapValue(HeaderMapType::RequestHeaders, ":method")
-          ->toString();
+  request_info_.request_operation =
+      getHeaderMapValue(HeaderMapType::RequestHeaders, ":method")->toString();
   // TODO: If this is an inbound listener, get peer node metadata
   return FilterHeadersStatus::Continue;
 }
@@ -137,13 +136,13 @@ StackdriverRootContext *StackdriverContext::GetRootContext() {
   return static_cast<StackdriverRootContext *>(root);
 }
 
-} // namespace Stackdriver
+}  // namespace Stackdriver
 
 #ifdef NULL_PLUGIN
-} // namespace Plugin
-} // namespace Null
-} // namespace Wasm
-} // namespace Common
-} // namespace Extensions
-} // namespace Envoy
+}  // namespace Plugin
+}  // namespace Null
+}  // namespace Wasm
+}  // namespace Common
+}  // namespace Extensions
+}  // namespace Envoy
 #endif

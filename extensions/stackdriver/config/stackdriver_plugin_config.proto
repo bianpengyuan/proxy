@@ -18,19 +18,19 @@ syntax = "proto3";
 package stackdriver.config;
 
 message PluginConfig {
-    // Indicates if the module should act as inbound or outbound reporter.
-    // Difference being:
-    //   * inbound and outbound have different metric types to export.
-    //   * inbound reporter writes access logs.
-    enum ReporterKind {
-        INBOUND = 0;
-        OUTBOUND = 1;
-    }
-    ReporterKind kind = 1;
+  // Indicates if the module should act as inbound or outbound reporter.
+  // Difference being:
+  //   * inbound and outbound have different metric types to export.
+  //   * inbound reporter writes access logs.
+  enum ReporterKind {
+    INBOUND = 0;
+    OUTBOUND = 1;
+  }
+  ReporterKind kind = 1;
 
-    // Controls whether to export access log.
-    bool export_access_log = 2;
+  // Controls whether to export access log.
+  bool export_access_log = 2;
 
-    // FQDN of destination service that the request routed to.
-    string destination_service_name = 3;
+  // FQDN of destination service that the request routed to.
+  string destination_service_name = 3;
 }

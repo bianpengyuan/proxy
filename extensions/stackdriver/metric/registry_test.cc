@@ -20,16 +20,16 @@ namespace Stackdriver {
 namespace Metric {
 
 TEST(RegistryTest, GetStackdriverOptions) {
-    Stackdriver::Common::NodeInfo node_info;
-    node_info.name = "pod_name";
-    node_info.namespace_name = "pod_namespace_name";
-    node_info.project_id = "project_id";
-    node_info.cluster_name = "test_cluster";
-    node_info.location = "test_zone";
+  Stackdriver::Common::NodeInfo node_info;
+  node_info.name = "pod_name";
+  node_info.namespace_name = "pod_namespace_name";
+  node_info.project_id = "project_id";
+  node_info.cluster_name = "test_cluster";
+  node_info.location = "test_zone";
 
-    auto option = GetStackdriverOptions(node_info);
-    EXPECT_EQ(option.project_id, node_info.project_id);
+  auto option = GetStackdriverOptions(node_info);
+  EXPECT_EQ(option.project_id, node_info.project_id);
 }
 
-} // namespace Metric
-} // namespace Stackdriver
+}  // namespace Metric
+}  // namespace Stackdriver

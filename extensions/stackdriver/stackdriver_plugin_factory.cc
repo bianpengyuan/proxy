@@ -24,7 +24,7 @@ namespace Null {
 namespace Plugin {
 namespace Stackdriver {
 NullVmPluginRootRegistry *context_registry_{};
-} // namespace Stackdriver
+}  // namespace Stackdriver
 
 const std::string kStackdriverPluginName = "envoy.wasm.null.stackdriver";
 
@@ -33,7 +33,7 @@ const std::string kStackdriverPluginName = "envoy.wasm.null.stackdriver";
  * NamedHttpFilterConfigFactory.
  */
 class StackdriverPluginFactory : public NullVmPluginFactory {
-public:
+ public:
   StackdriverPluginFactory() {}
 
   const std::string name() const override { return kStackdriverPluginName; }
@@ -50,9 +50,9 @@ public:
 static Registry::RegisterFactory<StackdriverPluginFactory, NullVmPluginFactory>
     register_;
 
-} // namespace Plugin
-} // namespace Null
-} // namespace Wasm
-} // namespace Common
-} // namespace Extensions
-} // namespace Envoy
+}  // namespace Plugin
+}  // namespace Null
+}  // namespace Wasm
+}  // namespace Common
+}  // namespace Extensions
+}  // namespace Envoy

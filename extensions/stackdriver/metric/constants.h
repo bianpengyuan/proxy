@@ -61,5 +61,5 @@ constexpr char kClusterNameLabel[] = "cluster_name";
 constexpr char kNamespaceNameLabel[] = "namespace_name";
 constexpr char kPodNameLabel[] = "pod_name";
 
-} // namespace Metric
-} // namespace Stackdriver
+}  // namespace Metric
+}  // namespace Stackdriver

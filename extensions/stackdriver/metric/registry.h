@@ -25,8 +25,8 @@ namespace Stackdriver {
 namespace Metric {
 
 // Returns Stackdriver exporter config option based on node metadata.
-opencensus::exporters::stats::StackdriverOptions
-GetStackdriverOptions(const Stackdriver::Common::NodeInfo &local_node_info);
+opencensus::exporters::stats::StackdriverOptions GetStackdriverOptions(
+    const Stackdriver::Common::NodeInfo &local_node_info);
 
 // Registers Opencensus views
 void RegisterViews();
@@ -59,5 +59,5 @@ opencensus::stats::MeasureInt64 ClientRequestBytesMeasure();
 opencensus::stats::MeasureInt64 ClientResponseBytesMeasure();
 opencensus::stats::MeasureDouble ClientRoundtripLatenciesMeasure();
 
-} // namespace Metric
-} // namespace Stackdriver
+}  // namespace Metric
+}  // namespace Stackdriver

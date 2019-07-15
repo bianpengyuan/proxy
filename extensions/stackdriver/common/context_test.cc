@@ -23,24 +23,17 @@ TEST(RegistryTest, ExtractNodeMetadata) {
   google::protobuf::Value metadata;
   auto metadata_struct = metadata.mutable_struct_value();
   auto metadata_fields = metadata_struct.mutable_fields();
-  
-  
 }
 
-TEST(RegistryTest, ExtractNodeMetadataNoMetadataField) {
-    
-}
+TEST(RegistryTest, ExtractNodeMetadataNoMetadataField) {}
 
-TEST(RegistryTest, ExtractNodeMetadataMetadataFieldNotStruct) {
-    
-}
+TEST(RegistryTest, ExtractNodeMetadataMetadataFieldNotStruct) {}
 
 TEST(RegistryTest, ExtractNodeMetadataFieldNotFound) {
   google::protobuf::Value metadata;
   auto metadata_struct = metadata.mutable_struct_value();
   auto metadata_fields = metadata_struct.mutable_fields();
-
 }
 
-} // namespace Common
-} // namespace Stackdriver
+}  // namespace Common
+}  // namespace Stackdriver

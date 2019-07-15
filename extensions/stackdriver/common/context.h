@@ -89,5 +89,5 @@ struct RequestInfo {
 bool ExtractNodeMetadata(const google::protobuf::Value &metadata,
                          NodeInfo *node_info);
 
-} // namespace Common
-} // namespace Stackdriver
+}  // namespace Common
+}  // namespace Stackdriver

@@ -82,5 +82,5 @@ void Recorder::Record(const ::Stackdriver::Common::NodeInfo &local_node_info,
   }
 }
 
-} // namespace Metric
-} // namespace Stackdriver
+}  // namespace Metric
+}  // namespace Stackdriver
