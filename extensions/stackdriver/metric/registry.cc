@@ -41,6 +41,10 @@ opencensus::exporters::stats::StackdriverOptions GetStackdriverOptions(
   (*inbound_monitored_resource.mutable_labels())[kPodNameLabel] =
       local_node_info.name;
   // TODO: Add monitored resource to options
+  options.monitored_resource[kServerRequestCountView] = inbound_monitored_resource;
+  options.monitored_resource[kServerRequestBytesView] = inbound_monitored_resource;
+  options.monitored_resource[kServerResponseBytesView] = inbound_monitored_resource;
+  options.monitored_resource[kServerResponseLatenciesView] = inbound_monitored_resource;
 
   // Outbound Monitored Resource
   google::api::MonitoredResource outbound_monitored_resource;
@@ -56,6 +60,10 @@ opencensus::exporters::stats::StackdriverOptions GetStackdriverOptions(
   (*outbound_monitored_resource.mutable_labels())[kPodNameLabel] =
       local_node_info.name;
   // TODO: Add monitored resource to options
+  options.monitored_resource[kClientRequestCountView] = inbound_monitored_resource;
+  options.monitored_resource[kClientRequestBytesView] = inbound_monitored_resource;
+  options.monitored_resource[kClientResponseBytesView] = inbound_monitored_resource;
+  options.monitored_resource[kClientRoundtripLatenciesView] = inbound_monitored_resource;
 
   return options;
 }

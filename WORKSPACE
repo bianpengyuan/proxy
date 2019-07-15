@@ -22,6 +22,10 @@ load(
     "googletest_repositories",
     "mixerapi_dependencies",
 )
+load(
+    "//extensions/stackdriver:opencensus/opencensus.bzl",
+    "io_opencensus_cpp",
+)
 
 googletest_repositories()
 
@@ -82,3 +86,23 @@ load("@io_bazel_rules_go//go:deps.bzl", "go_register_toolchains", "go_rules_depe
 go_rules_dependencies()
 
 go_register_toolchains(go_version = GO_VERSION)
+
+io_opencensus_cpp()
+TELEMETRY_GOOGLEAPIS_SHA="c39b7e880e6db2ce61704da2a55083ea17fdb14b"
+TELEMETRY_GOOGLEAPIS_SHA256="ee05b85961aa721671d85c111c6287e9667e69b616d97959588b1a991ef44a2d"
+TELEMETRY_GOOGLEAPIS_URLS=["https://github.com/googleapis/googleapis/archive/" + TELEMETRY_GOOGLEAPIS_SHA + ".tar.gz"]
+
+http_archive(
+    name = "com_google_googleapis",
+    urls = TELEMETRY_GOOGLEAPIS_URLS,
+    sha256 = TELEMETRY_GOOGLEAPIS_SHA256,
+    strip_prefix = "googleapis-" + TELEMETRY_GOOGLEAPIS_SHA,
+)
+
+load("@com_google_googleapis//:repository_rules.bzl", "switched_rules_by_language")
+
+switched_rules_by_language(
+    name = "com_google_googleapis_imports",
+    cc = True,
+    grpc = True,
+)

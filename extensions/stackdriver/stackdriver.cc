@@ -19,6 +19,7 @@
 #include <unordered_map>
 
 #include "extensions/stackdriver/stackdriver.h"
+#include "extensions/stackdriver/common/constants.h"
 
 #ifndef NULL_PLUGIN
 #include "api/wasm/cpp/proxy_wasm_intrinsics.h"
@@ -60,6 +61,11 @@ void StackdriverRootContext::onConfigure(
   auto metadata =
       getMetadataValue(Common::Wasm::MetadataType::Node, kNodeMetadataKey);
   ::Stackdriver::Common::ExtractNodeMetadata(metadata, &local_node_info_);
+
+  // Demo only
+  local_node_info_.project_id = config_.project_id();
+  local_node_info_.cluster_name = config_.cluster_name();
+  local_node_info_.location = config_.cluster_location();
 
   // Register OC Stackdriver exporter and views to be exported.
   // Note exporter and views are global singleton so they should only be

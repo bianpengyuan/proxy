@@ -33,4 +33,8 @@ message PluginConfig {
 
   // FQDN of destination service that the request routed to.
   string destination_service_name = 3;
+
+  string project_id = 4;
+  string cluster_location = 5;
+  string cluster_name = 6;
 }

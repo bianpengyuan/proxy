@@ -33,8 +33,8 @@ cc_library(
     deps = [
         "//extensions/stackdriver/common:context",
         "//extensions/stackdriver/config:stackdriver_plugin_config_proto_cc",
-        "@io_opencensus_cpp//opencensus/exporters/stats/stackdriver:stackdriver_exporter",
-        "@io_opencensus_cpp//opencensus/stats",
+        "@io_opencensus_cpp_istio//opencensus/exporters/stats/stackdriver:stackdriver_exporter",
+        "@io_opencensus_cpp_istio//opencensus/stats",
     ],
 )
 
