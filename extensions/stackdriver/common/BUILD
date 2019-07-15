@@ -29,4 +29,26 @@ cc_library(
         "//extensions/stackdriver:__pkg__",
         "//extensions/stackdriver/metric:__pkg__",
     ],
+    deps = [
+        ":constants",
+        "@com_google_protobuf//:protobuf"
+    ]
+)
+
+cc_library(
+    name = "constants",
+    hdrs = [
+        "constants.h",
+    ],
+)
+
+cc_test(
+    name = "context_test",
+    size = "small",
+    srcs = ["context_test.cc"],
+    linkstatic = 1,
+    deps = [
+        ":context",
+        "//external:googletest_main",
+    ],
 )

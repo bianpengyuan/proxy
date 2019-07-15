@@ -14,12 +14,7 @@
  */
 
 #include "extensions/stackdriver/common/context.h"
-
-constexpr char kIstioMetadata[] = "istio.io/metadata";
-constexpr char kPodNameKey[] = "name";
-constexpr char kNamespaceKey[] = "namespace";
-constexpr char kOwnerKey[] = "owner";
-constexpr char kWorkloadName[] = "workload_name";
+#include "extensions/stackdriver/common/constants.h"
 
 namespace Stackdriver {
 namespace Common {
@@ -27,10 +22,11 @@ namespace Common {
 void FillNodeMetadataField(
     const google::protobuf::Map<std::string, google::protobuf::Value> &metadata,
     const std::string &name, std::string *field) {
-  if (metadata.find(name) == metadata.end()) {
+  auto iter = metadata.find(name);
+  if (iter == metadata.end()) {
     return;
   }
-  *field = metadata.at(kPodNameKey).string_value();
+  *field = iter->second.string_value();
 }
 
 bool ExtractNodeMetadata(const google::protobuf::Value &metadata,
@@ -52,11 +48,13 @@ bool ExtractNodeMetadata(const google::protobuf::Value &metadata,
   }
   const auto &istio_metadata_fields = istio_metadata_struct.fields();
 
-  FillNodeMetadataField(istio_metadata_fields, kPodNameKey, &node_info_->name);
-  FillNodeMetadataField(istio_metadata_fields, kNamespaceKey,
+  FillNodeMetadataField(istio_metadata_fields, kMetadataPodNameKey,
+                        &node_info_->name);
+  FillNodeMetadataField(istio_metadata_fields, kMetadataNamespaceKey,
                         &node_info_->namespace_name);
-  FillNodeMetadataField(istio_metadata_fields, kOwnerKey, &node_info_->owner);
-  FillNodeMetadataField(istio_metadata_fields, kWorkloadName,
+  FillNodeMetadataField(istio_metadata_fields, kMetadataOwnerKey,
+                        &node_info_->owner);
+  FillNodeMetadataField(istio_metadata_fields, kMetadataWorkloadNameKey,
                         &node_info_->workload_name);
 
   return true;

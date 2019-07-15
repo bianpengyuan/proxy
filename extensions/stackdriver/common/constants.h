@@ -14,7 +14,7 @@
  */
 
 namespace Stackdriver {
-namespace Metric {
+namespace Common {
 
 // Measure names of metrics.
 constexpr char kServerRequestCountMeasure[] =
@@ -52,7 +52,7 @@ constexpr char kClientResponseBytesView[] =
 constexpr char kClientRoundtripLatenciesView[] =
     "istio.io/service/client/roundtrip_latencies";
 
-// Monitored Resource
+// Monitored resource
 constexpr char kPodMonitoredResource[] = "k8s_pod";
 constexpr char kContainerMonitoredResource[] = "k8s_container";
 constexpr char kProjectIDLabel[] = "project_id";
@@ -61,5 +61,12 @@ constexpr char kClusterNameLabel[] = "cluster_name";
 constexpr char kNamespaceNameLabel[] = "namespace_name";
 constexpr char kPodNameLabel[] = "pod_name";
 
-}  // namespace Metric
+// Node metadata
+constexpr char kIstioMetadata[] = "istio.io/metadata";
+constexpr char kMetadataPodNameKey[] = "name";
+constexpr char kMetadataNamespaceKey[] = "namespace";
+constexpr char kMetadataOwnerKey[] = "owner";
+constexpr char kMetadataWorkloadNameKey[] = "workload_name";
+
+}  // namespace Common
 }  // namespace Stackdriver

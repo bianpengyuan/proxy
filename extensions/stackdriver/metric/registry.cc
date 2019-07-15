@@ -14,8 +14,10 @@
  */
 
 #include "extensions/stackdriver/metric/registry.h"
-#include "extensions/stackdriver/metric/constants.h"
+#include "extensions/stackdriver/common/constants.h"
 #include "google/api/monitored_resource.pb.h"
+
+using namespace ::Stackdriver::Common;
 
 namespace Stackdriver {
 namespace Metric {

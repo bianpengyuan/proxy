@@ -31,7 +31,6 @@ cc_library(
         "//extensions/stackdriver:__pkg__",
     ],
     deps = [
-        ":constants",
         "//extensions/stackdriver/common:context",
         "//extensions/stackdriver/config:stackdriver_plugin_config_proto_cc",
         "@io_opencensus_cpp//opencensus/exporters/stats/stackdriver:stackdriver_exporter",
