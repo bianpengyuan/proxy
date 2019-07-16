@@ -124,7 +124,36 @@ REGISTER_DISTRIBUTION_VIEW(ClientRequestBytes)
 REGISTER_DISTRIBUTION_VIEW(ClientResponseBytes)
 REGISTER_DISTRIBUTION_VIEW(ClientRoundtripLatencies)
 
+/*
+ * measure function macros
+ */
+#define MEASURE_FUNC(_m, _u, _t)                                           \
+  opencensus::stats::Measure##_t _m##Measure() {                           \
+    static const opencensus::stats::Measure##_t measure =                  \
+        opencensus::stats::Measure##_t::Register(k##_m##Measure, "", #_u); \
+    return measure;                                                        \
+  }
+
+// Meausre functions
+MEASURE_FUNC(ServerRequestCount, 1, Int64)
+MEASURE_FUNC(ServerRequestBytes, By, Int64)
+MEASURE_FUNC(ServerResponseBytes, By, Int64)
+MEASURE_FUNC(ServerResponseLatencies, ms, Double)
+MEASURE_FUNC(ClientRequestCount, 1, Int64)
+MEASURE_FUNC(ClientRequestBytes, By, Int64)
+MEASURE_FUNC(ClientResponseBytes, By, Int64)
+MEASURE_FUNC(ClientRoundtripLatencies, ms, Double)
+
 void RegisterViews() {
+  ServerRequestCountMeasure();
+  ServerRequestBytesMeasure();
+  ServerResponseBytesMeasure();
+  ServerResponseLatenciesMeasure();
+  ClientRequestCountMeasure();
+  ClientRequestBytesMeasure();
+  ClientResponseBytesMeasure();
+  ClientRoundtripLatenciesMeasure();
+
   RegisterServerRequestCountView();
   RegisterServerRequestBytesView();
   RegisterServerResponseBytesView();
@@ -161,26 +190,6 @@ TAG_KEY_FUNC(destination_principal, DestinationPrincipal)
 TAG_KEY_FUNC(destination_workload_name, DestinationWorkloadName)
 TAG_KEY_FUNC(destination_workload_namespace, DestinationWorkloadNamespace)
 TAG_KEY_FUNC(destination_owner, DestinationOwner)
-
-/*
- * measure function macros
- */
-#define MEASURE_FUNC(_m, _u, _t)                                           \
-  opencensus::stats::Measure##_t _m##Measure() {                           \
-    static const opencensus::stats::Measure##_t measure =                  \
-        opencensus::stats::Measure##_t::Register(k##_m##Measure, "", #_u); \
-    return measure;                                                        \
-  }
-
-// Meausre functions
-MEASURE_FUNC(ServerRequestCount, 1, Int64)
-MEASURE_FUNC(ServerRequestBytes, By, Int64)
-MEASURE_FUNC(ServerResponseBytes, By, Int64)
-MEASURE_FUNC(ServerResponseLatencies, ms, Double)
-MEASURE_FUNC(ClientRequestCount, 1, Int64)
-MEASURE_FUNC(ClientRequestBytes, By, Int64)
-MEASURE_FUNC(ClientResponseBytes, By, Int64)
-MEASURE_FUNC(ClientRoundtripLatencies, ms, Double)
 
 }  // namespace Metric
 }  // namespace Stackdriver
