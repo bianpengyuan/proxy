@@ -37,6 +37,9 @@ bool ExtractNodeMetadata(const google::protobuf::Value &metadata,
   }
 
   const auto &node_metadata_fields = node_metadata_struct.fields();
+  for (const auto f : node_metadata_fields) {
+    std::cout<<f.first<<"\n";
+  }
   auto iter = node_metadata_fields.find(kIstioMetadata);
   if (iter == node_metadata_fields.end()) {
     return false;
@@ -44,6 +47,7 @@ bool ExtractNodeMetadata(const google::protobuf::Value &metadata,
 
   const auto &istio_metadata_struct = iter->second.struct_value();
   if (istio_metadata_struct.fields().empty()) {
+    std::cout<<333;
     return false;
   }
   const auto &istio_metadata_fields = istio_metadata_struct.fields();

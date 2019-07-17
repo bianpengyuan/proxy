@@ -29,7 +29,7 @@ opencensus::exporters::stats::StackdriverOptions GetStackdriverOptions(
 
   // Inbound Monitored Resource
   google::api::MonitoredResource inbound_monitored_resource;
-  inbound_monitored_resource.set_type(kPodMonitoredResource);
+  inbound_monitored_resource.set_type(kContainerMonitoredResource);
   (*inbound_monitored_resource.mutable_labels())[kProjectIDLabel] =
       local_node_info.project_id;
   (*inbound_monitored_resource.mutable_labels())[kLocationLabel] =
@@ -40,6 +40,8 @@ opencensus::exporters::stats::StackdriverOptions GetStackdriverOptions(
       local_node_info.namespace_name;
   (*inbound_monitored_resource.mutable_labels())[kPodNameLabel] =
       local_node_info.name;
+  (*inbound_monitored_resource.mutable_labels())[kContainerNameLabel] =
+      local_node_info.name;
   // TODO: Add monitored resource to options
   options.monitored_resource[kServerRequestCountView] = inbound_monitored_resource;
   options.monitored_resource[kServerRequestBytesView] = inbound_monitored_resource;
@@ -48,7 +50,7 @@ opencensus::exporters::stats::StackdriverOptions GetStackdriverOptions(
 
   // Outbound Monitored Resource
   google::api::MonitoredResource outbound_monitored_resource;
-  outbound_monitored_resource.set_type(kContainerMonitoredResource);
+  outbound_monitored_resource.set_type(kPodMonitoredResource);
   (*outbound_monitored_resource.mutable_labels())[kProjectIDLabel] =
       local_node_info.project_id;
   (*outbound_monitored_resource.mutable_labels())[kLocationLabel] =
@@ -60,10 +62,10 @@ opencensus::exporters::stats::StackdriverOptions GetStackdriverOptions(
   (*outbound_monitored_resource.mutable_labels())[kPodNameLabel] =
       local_node_info.name;
   // TODO: Add monitored resource to options
-  options.monitored_resource[kClientRequestCountView] = inbound_monitored_resource;
-  options.monitored_resource[kClientRequestBytesView] = inbound_monitored_resource;
-  options.monitored_resource[kClientResponseBytesView] = inbound_monitored_resource;
-  options.monitored_resource[kClientRoundtripLatenciesView] = inbound_monitored_resource;
+  options.monitored_resource[kClientRequestCountView] = outbound_monitored_resource;
+  options.monitored_resource[kClientRequestBytesView] = outbound_monitored_resource;
+  options.monitored_resource[kClientResponseBytesView] = outbound_monitored_resource;
+  options.monitored_resource[kClientRoundtripLatenciesView] = outbound_monitored_resource;
 
   return options;
 }

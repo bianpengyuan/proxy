@@ -60,6 +60,7 @@ constexpr char kLocationLabel[] = "location";
 constexpr char kClusterNameLabel[] = "cluster_name";
 constexpr char kNamespaceNameLabel[] = "namespace_name";
 constexpr char kPodNameLabel[] = "pod_name";
+constexpr char kContainerNameLabel[] = "container_name";
 
 // Node metadata
 constexpr char kIstioMetadata[] = "istio.io/metadata";
