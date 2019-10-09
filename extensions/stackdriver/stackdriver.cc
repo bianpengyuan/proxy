@@ -78,8 +78,8 @@ bool StackdriverRootContext::onConfigure(
     logWarn("Unable to get plugin direction");
   }
 
-  auto exporter_ = std::make_unique<ExporterImpl>(this, config_.test_logging_endpoint());
-  logger_ = std::make_unique<Logger>(local_node_info_, std::move(exporter_));
+  auto exporter = std::make_unique<ExporterImpl>(this, config_.test_logging_endpoint());
+  logger_ = std::make_unique<Logger>(local_node_info_, std::move(exporter));
   
   // Register OC Stackdriver exporter and views to be exported.
   // Note exporter and views are global singleton so they should only be
@@ -116,7 +116,7 @@ void StackdriverRootContext::record(const RequestInfo &request_info,
   ::Extensions::Stackdriver::Metric::record(isOutbound(), local_node_info_,
                                             peer_node_info, request_info);
   if (!config_.disable_access_logging()) {
-    // logger_->addLogEntry(request_info, peer_node_info);
+    logger_->addLogEntry(request_info, peer_node_info);
   }
 }
 

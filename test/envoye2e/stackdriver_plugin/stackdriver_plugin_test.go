@@ -44,6 +44,7 @@ const outboundStackdriverFilter = `- name: envoy.filters.http.wasm
     configuration: >-
       {
         "testMonitoringEndpoint": "localhost:12312",
+        "testLoggingEndpoint": "localhost:12312",
       }`
 
 const inboundStackdriverFilter = `- name: envoy.filters.http.wasm
@@ -62,6 +63,7 @@ const inboundStackdriverFilter = `- name: envoy.filters.http.wasm
     configuration: >-
       {
         "testMonitoringEndpoint": "localhost:12312",
+        "testLoggingEndpoint": "localhost:12312",
       }`
 
 const outboundNodeMetadata = `"NAMESPACE": "default",
@@ -152,7 +154,7 @@ func verifyCreateTimeSeriesReq(got *monitoringpb.CreateTimeSeriesRequest) error 
 
 func TestStackdriverPlugin(t *testing.T) {
 	s := env.NewClientServerEnvoyTestSetup(env.StackdriverPluginTest, t)
-	fsd := fs.NewFakeStackdriver(12312)
+	fsdm, fsdl := fs.NewFakeStackdriver(12312)
 	s.SetFiltersBeforeEnvoyRouterInClientToProxy(outboundStackdriverFilter)
 	s.SetFiltersBeforeEnvoyRouterInProxyToServer(inboundStackdriverFilter)
 	s.SetServerNodeMetadata(inboundNodeMetadata)
@@ -175,10 +177,12 @@ func TestStackdriverPlugin(t *testing.T) {
 	for i := 0; i < 2; i++ {
 		// Two requests should be recevied: one from client and one from server.
 		select {
-		case req := <-fsd.RcvReq:
+		case req := <-fsdm.RcvMetricReq:
 			if err := verifyCreateTimeSeriesReq(req); err != nil {
 				t.Errorf("CreateTimeSeries verification failed: %v", err)
 			}
+		case _ = <-fsdl.RcvLoggingReq:
+
 		case <-time.After(20 * time.Second):
 			t.Error("timeout on waiting Stackdriver server to receive request")
 		}
