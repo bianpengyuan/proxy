@@ -37,6 +37,8 @@ envoy_cc_library(
         "//extensions/stackdriver/common:constants",
         "//extensions/stackdriver/config/v1alpha1:stackdriver_plugin_config_cc_proto",
         "//extensions/stackdriver/metric",
+        "//extensions/stackdriver/log:logger",
+        "//extensions/stackdriver/log:exporter",
         "@envoy//source/extensions/common/wasm/null:null_plugin_lib",
         "@io_opencensus_cpp//opencensus/exporters/stats/stackdriver:stackdriver_exporter",
     ],

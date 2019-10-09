@@ -21,6 +21,7 @@
 #include "extensions/stackdriver/common/constants.h"
 #include "extensions/stackdriver/metric/registry.h"
 #include "extensions/stackdriver/stackdriver.h"
+#include "extensions/stackdriver/log/exporter.h"
 
 #ifndef NULL_PLUGIN
 #include "api/wasm/cpp/proxy_wasm_intrinsics.h"
@@ -46,6 +47,8 @@ using ::Wasm::Common::kDownstreamMetadataKey;
 using ::Wasm::Common::kUpstreamMetadataKey;
 using ::wasm::common::NodeInfo;
 using ::Wasm::Common::RequestInfo;
+using ::Extensions::Stackdriver::Log::Logger;
+using Extensions::Stackdriver::Log::ExporterImpl;
 
 constexpr char kStackdriverExporter[] = "stackdriver_exporter";
 constexpr char kExporterRegistered[] = "registered";
@@ -75,6 +78,9 @@ bool StackdriverRootContext::onConfigure(
     logWarn("Unable to get plugin direction");
   }
 
+  auto exporter_ = std::make_unique<ExporterImpl>(this, config_.test_logging_endpoint());
+  logger_ = std::make_unique<Logger>(local_node_info_, std::move(exporter_));
+  
   // Register OC Stackdriver exporter and views to be exported.
   // Note exporter and views are global singleton so they should only be
   // registered once.
@@ -109,6 +115,9 @@ void StackdriverRootContext::record(const RequestInfo &request_info,
                                     const NodeInfo &peer_node_info) {
   ::Extensions::Stackdriver::Metric::record(isOutbound(), local_node_info_,
                                             peer_node_info, request_info);
+  if (!config_.disable_access_logging()) {
+    logger_->addLogEntry(request_info, peer_node_info);
+  }
 }
 
 inline bool StackdriverRootContext::isOutbound() {
