@@ -25,12 +25,14 @@ import (
 	empty "github.com/golang/protobuf/ptypes/empty"
 	"google.golang.org/genproto/googleapis/api/metric"
 	"google.golang.org/genproto/googleapis/api/monitoredres"
+	logging "google.golang.org/genproto/googleapis/logging/v2"
 	monitoringpb "google.golang.org/genproto/googleapis/monitoring/v3"
 )
 
 // FakeStackdriverServer is a fake stackdriver server which implements all of monitoring v3 service method.
 type FakeStackdriverServer struct {
-	RcvReq chan *monitoringpb.CreateTimeSeriesRequest
+	RcvMetricReq  chan *monitoringpb.CreateTimeSeriesRequest
+	RcvLoggingReq chan *logging.WriteLogEntriesRequest
 }
 
 // ListMonitoredResourceDescriptors implements ListMonitoredResourceDescriptors method.
@@ -70,8 +72,28 @@ func (s *FakeStackdriverServer) ListTimeSeries(context.Context, *monitoringpb.Li
 
 // CreateTimeSeries implements CreateTimeSeries method.
 func (s *FakeStackdriverServer) CreateTimeSeries(ctx context.Context, req *monitoringpb.CreateTimeSeriesRequest) (*empty.Empty, error) {
-	s.RcvReq <- req
+	s.RcvMetricReq <- req
 	return &empty.Empty{}, nil
+}
+
+// DeleteLog implements DeleteLog method.
+func (s *FakeStackdriverServer) DeleteLog(context.Context, *logging.DeleteLogRequest) (*empty.Empty, error) {
+	return &empty.Empty{}, nil
+}
+
+// WriteLogEntries implements WriteLogEntries method.
+func (s *FakeStackdriverServer) WriteLogEntries(context.Context, *logging.WriteLogEntriesRequest) (*logging.WriteLogEntriesResponse, error) {
+	return &logging.WriteLogEntriesResponse{}, nil
+}
+
+// ListLogEntries implementes ListLogEntries method.
+func (s *FakeStackdriverServer) ListLogEntries(context.Context, *logging.ListLogEntriesRequest) (*logging.ListLogEntriesResponse, error) {
+	return &logging.ListLogEntriesResponse{}, nil
+}
+
+// ListLogs implements ListLogs method.
+func (s *FakeStackdriverServer) ListLogs(context.Context, *logging.ListLogsRequest) (*logging.ListLogsResponse, error) {
+	return &logging.ListLogsResponse{}, nil
 }
 
 func newServer() *FakeStackdriverServer {
@@ -83,9 +105,11 @@ func NewFakeStackdriver(port uint16) *FakeStackdriverServer {
 	log.Printf("Stackdriver server listening on port %v\n", port)
 	grpcServer := grpc.NewServer()
 	fsds := &FakeStackdriverServer{
-		RcvReq: make(chan *monitoringpb.CreateTimeSeriesRequest, 2),
+		RcvMetricReq:  make(chan *monitoringpb.CreateTimeSeriesRequest, 2),
+		RcvLoggingReq: make(chan *logging.WriteLogEntriesRequest, 2),
 	}
 	monitoringpb.RegisterMetricServiceServer(grpcServer, fsds)
+	logging.RegisterLoggingServiceV2Server(grpcServer, fsds)
 
 	go func() {
 		lis, err := net.Listen("tcp", fmt.Sprintf(":%d", port))

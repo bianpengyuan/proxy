@@ -116,7 +116,7 @@ void StackdriverRootContext::record(const RequestInfo &request_info,
   ::Extensions::Stackdriver::Metric::record(isOutbound(), local_node_info_,
                                             peer_node_info, request_info);
   if (!config_.disable_access_logging()) {
-    logger_->addLogEntry(request_info, peer_node_info);
+    // logger_->addLogEntry(request_info, peer_node_info);
   }
 }
 
