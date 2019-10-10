@@ -25,6 +25,7 @@ import (
 	fs "istio.io/proxy/test/envoye2e/stackdriver_plugin/fake_stackdriver"
 
 	"github.com/golang/protobuf/proto"
+	logging "google.golang.org/genproto/googleapis/logging/v2"
 	monitoringpb "google.golang.org/genproto/googleapis/monitoring/v3"
 )
 
@@ -136,6 +137,15 @@ func compareTimeSeries(got, want *monitoringpb.TimeSeries) error {
 	return nil
 }
 
+func compareLogEntries(got, want *logging.WriteLogEntriesRequest) error {
+	for _, l := range got.Entries {
+		l.Timestamp = nil
+	}
+	if !proto.Equal(want, got) {
+		
+	}
+}
+
 func verifyCreateTimeSeriesReq(got *monitoringpb.CreateTimeSeriesRequest) error {
 	var srvReqCount, cltReqCount monitoringpb.TimeSeries
 	jsonpb.UnmarshalString(fs.ServerRequestCountJSON, &srvReqCount)
@@ -146,6 +156,18 @@ func verifyCreateTimeSeriesReq(got *monitoringpb.CreateTimeSeriesRequest) error 
 		}
 		if t.Metric.Type == cltReqCount.Metric.Type {
 			return compareTimeSeries(t, &cltReqCount)
+		}
+	}
+	// at least one time series should match either client side request count or server side request count.
+	return fmt.Errorf("cannot find expected request count from creat time series request %v", got)
+}
+
+func verifyCreateTimeSeriesReq(got *logging.WriteLogEntriesRequest) error {
+	var srvLogReq monitoringpb.TimeSeries
+	jsonpb.UnmarshalString(fs.ServerAccessLogJSON, &srvLogReq)
+	for _, t := range got.TimeSeries {
+		if t.Metric.Type == srvReqCount.Metric.Type {
+			return compareTimeSeries(t, &srvReqCount)
 		}
 	}
 	// at least one time series should match either client side request count or server side request count.
@@ -174,15 +196,17 @@ func TestStackdriverPlugin(t *testing.T) {
 		}
 	}
 
-	for i := 0; i < 2; i++ {
+	for i := 0; i < 3; i++ {
 		// Two requests should be recevied: one from client and one from server.
 		select {
 		case req := <-fsdm.RcvMetricReq:
 			if err := verifyCreateTimeSeriesReq(req); err != nil {
 				t.Errorf("CreateTimeSeries verification failed: %v", err)
 			}
-		case _ = <-fsdl.RcvLoggingReq:
-
+		case req := <-fsdl.RcvLoggingReq:
+			if err := verifyWriteLogEntriesReq(req); err != nil {
+				t.Errorf("WriteLogEntries verification failed: %v", err)
+			}
 		case <-time.After(20 * time.Second):
 			t.Error("timeout on waiting Stackdriver server to receive request")
 		}

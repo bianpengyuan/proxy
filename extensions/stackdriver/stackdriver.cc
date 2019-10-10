@@ -52,6 +52,7 @@ using Extensions::Stackdriver::Log::ExporterImpl;
 
 constexpr char kStackdriverExporter[] = "stackdriver_exporter";
 constexpr char kExporterRegistered[] = "registered";
+constexpr int kDefaultExportMilliseconds = 15000;
 
 bool StackdriverRootContext::onConfigure(
     std::unique_ptr<WasmData> configuration) {
@@ -100,15 +101,11 @@ bool StackdriverRootContext::onConfigure(
 }
 
 void StackdriverRootContext::onStart(std::unique_ptr<WasmData>) {
-#ifndef NULL_PLUGIN
-// TODO: Start a timer to trigger exporting
-#endif
+  proxy_setTickPeriodMilliseconds(kDefaultExportMilliseconds);
 }
 
 void StackdriverRootContext::onTick() {
-#ifndef NULL_PLUGIN
-// TODO: Add exporting logic with WASM gRPC API
-#endif
+  logger_->exportLogEntry();
 }
 
 void StackdriverRootContext::record(const RequestInfo &request_info,

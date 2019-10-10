@@ -86,7 +86,8 @@ func (s *FakeStackdriverLoggingServer) DeleteLog(context.Context, *logging.Delet
 }
 
 // WriteLogEntries implements WriteLogEntries method.
-func (s *FakeStackdriverLoggingServer) WriteLogEntries(context.Context, *logging.WriteLogEntriesRequest) (*logging.WriteLogEntriesResponse, error) {
+func (s *FakeStackdriverLoggingServer) WriteLogEntries(ctx context.Context, req *logging.WriteLogEntriesRequest) (*logging.WriteLogEntriesResponse, error) {
+	s.RcvLoggingReq <- req
 	return &logging.WriteLogEntriesResponse{}, nil
 }
 
