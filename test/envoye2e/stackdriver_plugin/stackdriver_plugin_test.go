@@ -142,8 +142,9 @@ func compareLogEntries(got, want *logging.WriteLogEntriesRequest) error {
 		l.Timestamp = nil
 	}
 	if !proto.Equal(want, got) {
-		
+		return fmt.Errorf("log entries are not expected, got %v \nwant %v\n", proto.MarshalTextString(got), proto.MarshalTextString(want))
 	}
+	return nil
 }
 
 func verifyCreateTimeSeriesReq(got *monitoringpb.CreateTimeSeriesRequest) error {
@@ -162,16 +163,10 @@ func verifyCreateTimeSeriesReq(got *monitoringpb.CreateTimeSeriesRequest) error 
 	return fmt.Errorf("cannot find expected request count from creat time series request %v", got)
 }
 
-func verifyCreateTimeSeriesReq(got *logging.WriteLogEntriesRequest) error {
-	var srvLogReq monitoringpb.TimeSeries
+func verifyWriteLogEntriesReq(got *logging.WriteLogEntriesRequest) error {
+	var srvLogReq logging.WriteLogEntriesRequest
 	jsonpb.UnmarshalString(fs.ServerAccessLogJSON, &srvLogReq)
-	for _, t := range got.TimeSeries {
-		if t.Metric.Type == srvReqCount.Metric.Type {
-			return compareTimeSeries(t, &srvReqCount)
-		}
-	}
-	// at least one time series should match either client side request count or server side request count.
-	return fmt.Errorf("cannot find expected request count from creat time series request %v", got)
+	return compareLogEntries(got, &srvLogReq)
 }
 
 func TestStackdriverPlugin(t *testing.T) {
