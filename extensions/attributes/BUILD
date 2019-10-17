@@ -1,0 +1,25 @@
+licenses(["notice"])  # Apache 2
+
+load(
+    "@envoy//bazel:envoy_build_system.bzl",
+    "envoy_cc_library",
+    "envoy_package",
+)
+
+envoy_package()
+
+envoy_cc_library(
+    name = "attributes_lib",
+    srcs = [
+        "config.cc",
+        "plugin.cc",
+    ],
+    hdrs = [
+        "plugin.h",
+    ],
+    repository = "@envoy",
+    visibility = ["//visibility:public"],
+    deps = [
+        "@envoy//source/extensions/common/wasm/null:null_plugin_lib",
+    ],
+)
