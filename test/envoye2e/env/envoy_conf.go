@@ -62,7 +62,6 @@ static_resources:
                 port_value: {{.Ports.ProxyToServerProxyPort}}
   listeners:
   - name: app-to-client
-    traffic_direction: INBOUND
     address:
       socket_address:
         address: 127.0.0.1

@@ -42,7 +42,6 @@ const outboundStackdriverFilter = `- name: envoy.filters.http.wasm
     config:
       root_id: "stackdriver_outbound"
       vm_config:
-        vm_id: "stackdriver_outbound"
         runtime: "envoy.wasm.runtime.null"
         code:
           inline_string: "envoy.wasm.null.stackdriver"
@@ -52,7 +51,7 @@ const outboundStackdriverFilter = `- name: envoy.filters.http.wasm
           "testLoggingEndpoint": "localhost:12312",
         }`
 
-const inboundSDFilter = `- name: envoy.filters.http.wasm
+const inboundStackdriverFilter = `- name: envoy.filters.http.wasm
   config:
     config:
       vm_config:
@@ -65,7 +64,6 @@ const inboundSDFilter = `- name: envoy.filters.http.wasm
     config:
       root_id: "stackdriver_inbound"
       vm_config:
-        vm_id: "stackdriver_inbound"
         runtime: "envoy.wasm.runtime.null"
         code:
           inline_string: "envoy.wasm.null.stackdriver"
@@ -74,18 +72,6 @@ const inboundSDFilter = `- name: envoy.filters.http.wasm
           "testMonitoringEndpoint": "localhost:12312",
           "testLoggingEndpoint": "localhost:12312",
         }`
-
-const extraInboundSDFilter = `- name: envoy.filters.http.wasm
-  config:
-    config:
-      root_id: "stackdriver_inbound"
-      vm_config:
-        vm_id: "stackdriver_inbound"
-        runtime: "envoy.wasm.runtime.null"
-        code:
-          inline_string: "envoy.wasm.null.stackdriver"
-      configuration: >-
-        {}`
 
 const outboundNodeMetadata = `"NAMESPACE": "default",
 "INCLUDE_INBOUND_PORTS": "9080",
@@ -159,27 +145,25 @@ func compareLogEntries(got, want *logging.WriteLogEntriesRequest) error {
 		l.Timestamp = nil
 	}
 	if !proto.Equal(want, got) {
-		return fmt.Errorf("log entries are not expected, got %v \nwant %v\n", proto.MarshalTextString(got), proto.MarshalTextString(want))
+		return fmt.Errorf("log entries re not expected, got %v \nwant %v\n", proto.MarshalTextString(got), proto.MarshalTextString(want))
 	}
 	return nil
 }
 
-func verifyCreateTimeSeriesReq(got *monitoringpb.CreateTimeSeriesRequest) (error, bool) {
+func verifyCreateTimeSeriesReq(got *monitoringpb.CreateTimeSeriesRequest) error {
 	var srvReqCount, cltReqCount monitoringpb.TimeSeries
 	jsonpb.UnmarshalString(fs.ServerRequestCountJSON, &srvReqCount)
 	jsonpb.UnmarshalString(fs.ClientRequestCountJSON, &cltReqCount)
-	isClient := true
 	for _, t := range got.TimeSeries {
 		if t.Metric.Type == srvReqCount.Metric.Type {
-			isClient = false
-			return compareTimeSeries(t, &srvReqCount), isClient
+			return compareTimeSeries(t, &srvReqCount)
 		}
 		if t.Metric.Type == cltReqCount.Metric.Type {
-			return compareTimeSeries(t, &cltReqCount), isClient
+			return compareTimeSeries(t, &cltReqCount)
 		}
 	}
 	// at least one time series should match either client side request count or server side request count.
-	return fmt.Errorf("cannot find expected request count from creat time series request %v", got), isClient
+	return fmt.Errorf("cannot find expected request count from creat time series request %v", got)
 }
 
 func verifyWriteLogEntriesReq(got *logging.WriteLogEntriesRequest) error {
@@ -192,8 +176,7 @@ func TestStackdriverPlugin(t *testing.T) {
 	s := env.NewClientServerEnvoyTestSetup(env.StackdriverPluginTest, t)
 	fsdm, fsdl := fs.NewFakeStackdriver(12312)
 	s.SetFiltersBeforeEnvoyRouterInClientToProxy(outboundStackdriverFilter)
-	s.SetFiltersBeforeEnvoyRouterInProxyToServer(inboundSDFilter)
-	s.SetFiltersBeforeEnvoyRouterInAppToClient(extraInboundSDFilter)
+	s.SetFiltersBeforeEnvoyRouterInProxyToServer(inboundStackdriverFilter)
 	s.SetServerNodeMetadata(inboundNodeMetadata)
 	s.SetClientNodeMetadata(outboundNodeMetadata)
 	if err := s.SetUpClientServerEnvoy(); err != nil {
@@ -210,22 +193,14 @@ func TestStackdriverPlugin(t *testing.T) {
 			t.Errorf("Failed in request %s: %v", tag, err)
 		}
 	}
-	srvMetricRcv := false
-	cltMetricRcv := false
 
 	for i := 0; i < 3; i++ {
 		// Two requests should be recevied by monitoring server: one from client and one from server.
 		// One request should be received by logging server.
 		select {
 		case req := <-fsdm.RcvMetricReq:
-			err, isClient := verifyCreateTimeSeriesReq(req)
-			if err != nil {
+			if err := verifyCreateTimeSeriesReq(req); err != nil {
 				t.Errorf("CreateTimeSeries verification failed: %v", err)
-			}
-			if isClient {
-				cltMetricRcv = true
-			} else {
-				srvMetricRcv = true
 			}
 		case req := <-fsdl.RcvLoggingReq:
 			if err := verifyWriteLogEntriesReq(req); err != nil {
@@ -234,8 +209,5 @@ func TestStackdriverPlugin(t *testing.T) {
 		case <-time.After(20 * time.Second):
 			t.Error("timeout on waiting Stackdriver server to receive request")
 		}
-	}
-	if !srvMetricRcv || !cltMetricRcv {
-		t.Errorf("fail to receive metric request from both sides. client recieved: %v and server recieved: %v", cltMetricRcv, srvMetricRcv)
 	}
 }
