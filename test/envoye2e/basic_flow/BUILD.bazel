@@ -1,0 +1,15 @@
+load("@io_bazel_rules_go//go:def.bzl", "go_library", "go_test")
+
+go_library(
+    name = "go_default_library",
+    srcs = ["doc.go"],
+    importpath = "istio.io/proxy/test/envoye2e/basic_flow",
+    visibility = ["//visibility:public"],
+)
+
+go_test(
+    name = "go_default_test",
+    srcs = ["basic_flow_test.go"],
+    embed = [":go_default_library"],
+    deps = ["//test/envoye2e/env:go_default_library"],
+)

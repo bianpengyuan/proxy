@@ -103,3 +103,26 @@ container_pull(
 )
 
 # End of docker dependencies
+
+# Golang lint dependencies
+
+# golangci-lint needs Go SDK and hence needs rules_go.
+# See https://github.com/bazelbuild/rules_go for the up to date setup instructions.
+http_archive(
+    name = "io_bazel_rules_go",
+)
+
+ATLASSIAN_BAZEL_TOOLS_SHA = "a2138311856f55add11cd7009a5abc8d4fd6f163"
+
+http_archive(
+    name = "com_github_atlassian_bazel_tools",
+    strip_prefix = "bazel-tools-" + ATLASSIAN_BAZEL_TOOLS_SHA,
+    urls = ["https://github.com/atlassian/bazel-tools/archive/" + ATLASSIAN_BAZEL_TOOLS_SHA + ".zip"],
+)
+
+load("@com_github_atlassian_bazel_tools//golangcilint:deps.bzl", "golangcilint_dependencies")
+
+golangcilint_dependencies()
+
+# End of golang ci dependecies
+

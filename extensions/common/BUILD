@@ -1,3 +1,6 @@
+load("@io_bazel_rules_go//go:def.bzl", "go_library")
+load("@io_bazel_rules_go//proto:def.bzl", "go_proto_library")
+
 # Copyright 2019 Istio Authors. All Rights Reserved.
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
@@ -63,4 +66,25 @@ envoy_cc_test(
         ":context",
         "@envoy//source/extensions/common/wasm:wasm_lib",
     ],
+)
+
+proto_library(
+    name = "wasm_common_proto",
+    srcs = ["node_info.proto"],
+    visibility = ["//visibility:public"],
+)
+
+go_proto_library(
+    name = "wasm_common_go_proto",
+    importpath = "istio.io/proxy/extensions/common",
+    proto = ":wasm_common_proto",
+    visibility = ["//visibility:public"],
+)
+
+go_library(
+    name = "go_default_library",
+    srcs = ["context.h"],
+    embed = [":wasm_common_go_proto"],
+    importpath = "istio.io/proxy/extensions/common",
+    visibility = ["//visibility:public"],
 )

@@ -1,3 +1,6 @@
+load("@io_bazel_rules_go//go:def.bzl", "go_library")
+load("@io_bazel_rules_go//proto:def.bzl", "go_proto_library")
+
 # Copyright 2019 Istio Authors. All Rights Reserved.
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
@@ -24,4 +27,24 @@ cc_proto_library(
     name = "metadata_exchange_cc_proto",
     visibility = ["//visibility:public"],
     deps = ["metadata_exchange_proto"],
+)
+
+proto_library(
+    name = "MetadataExchange_proto",
+    srcs = ["metadata_exchange.proto"],
+    visibility = ["//visibility:public"],
+)
+
+go_proto_library(
+    name = "MetadataExchange_go_proto",
+    importpath = "istio.io/proxy/src/envoy/tcp/metadata_exchange/config",
+    proto = ":MetadataExchange_proto",
+    visibility = ["//visibility:public"],
+)
+
+go_library(
+    name = "go_default_library",
+    embed = [":MetadataExchange_go_proto"],
+    importpath = "istio.io/proxy/src/envoy/tcp/metadata_exchange/config",
+    visibility = ["//visibility:public"],
 )

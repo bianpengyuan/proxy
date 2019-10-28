@@ -1,3 +1,6 @@
+load("@io_bazel_rules_go//go:def.bzl", "go_library")
+load("@io_bazel_rules_go//proto:def.bzl", "go_proto_library")
+
 # Copyright 2018 Istio Authors. All Rights Reserved.
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
@@ -26,4 +29,22 @@ envoy_proto_library(
     name = "context_proto",
     srcs = ["context.proto"],
     external_deps = ["well_known_protos"],
+)
+
+proto_library(
+    name = "istio_authn_proto",
+    srcs = ["context.proto"],
+    deps = ["@com_google_protobuf//:struct_proto"],
+)
+
+go_proto_library(
+    name = "istio_authn_go_proto",
+    importpath = "istio.io/proxy/src/istio/authn",
+    proto = ":istio_authn_proto",
+)
+
+go_library(
+    name = "go_default_library",
+    embed = [":istio_authn_go_proto"],
+    importpath = "istio.io/proxy/src/istio/authn",
 )

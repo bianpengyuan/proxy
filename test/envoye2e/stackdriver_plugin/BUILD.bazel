@@ -1,0 +1,22 @@
+load("@io_bazel_rules_go//go:def.bzl", "go_library", "go_test")
+
+go_library(
+    name = "go_default_library",
+    srcs = ["doc.go"],
+    importpath = "istio.io/proxy/test/envoye2e/stackdriver_plugin",
+    visibility = ["//visibility:public"],
+)
+
+go_test(
+    name = "go_default_test",
+    srcs = ["stackdriver_plugin_test.go"],
+    embed = [":go_default_library"],
+    deps = [
+        "//test/envoye2e/env:go_default_library",
+        "//test/envoye2e/stackdriver_plugin/fake_stackdriver:go_default_library",
+        "@com_github_golang_protobuf//jsonpb:go_default_library_gen",
+        "@com_github_golang_protobuf//proto:go_default_library",
+        "@go_googleapis//google/logging/v2:logging_go_proto",
+        "@go_googleapis//google/monitoring/v3:monitoring_go_proto",
+    ],
+)

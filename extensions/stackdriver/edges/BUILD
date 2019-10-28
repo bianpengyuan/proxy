@@ -1,3 +1,6 @@
+load("@io_bazel_rules_go//go:def.bzl", "go_library")
+load("@io_bazel_rules_go//proto:def.bzl", "go_proto_library")
+
 # Copyright 2019 Istio Authors. All Rights Reserved.
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
@@ -82,4 +85,30 @@ envoy_cc_test(
         ":edge_reporter",
         "@envoy//source/extensions/common/wasm:wasm_lib",
     ],
+)
+
+proto_library(
+    name = "google_cloud_meshtelemetry_v1alpha1_proto",
+    srcs = ["edges.proto"],
+    visibility = ["//visibility:public"],
+    deps = ["@com_google_protobuf//:timestamp_proto"],
+)
+
+go_proto_library(
+    name = "google_cloud_meshtelemetry_v1alpha1_go_proto",
+    compilers = ["@io_bazel_rules_go//proto:go_grpc"],
+    importpath = "istio.io/proxy/extensions/stackdriver/edges",
+    proto = ":google_cloud_meshtelemetry_v1alpha1_proto",
+    visibility = ["//visibility:public"],
+)
+
+go_library(
+    name = "go_default_library",
+    srcs = [
+        "edge_reporter.h",
+        "mesh_edges_service_client.h",
+    ],
+    embed = [":google_cloud_meshtelemetry_v1alpha1_go_proto"],
+    importpath = "istio.io/proxy/extensions/stackdriver/edges",
+    visibility = ["//visibility:public"],
 )

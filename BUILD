@@ -17,6 +17,8 @@
 
 exports_files(["LICENSE"])
 
+load("@com_github_atlassian_bazel_tools//golangcilint:def.bzl", "golangcilint")
+
 config_setting(
     name = "darwin",
     values = {
@@ -31,4 +33,10 @@ genrule(
     outs = ["deb_version.txt"],
     cmd = "echo $${ISTIO_VERSION:-\"0.3.0-dev\"} > \"$@\"",
     visibility = ["//visibility:public"],
+)
+
+golangcilint(
+    name = "golangcilint",
+    config = "//:.golangcilint.yml",
+    prefix = "istio.io/proxy",
 )
