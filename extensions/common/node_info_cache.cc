@@ -29,12 +29,42 @@ using google::protobuf::util::Status;
 namespace Wasm {
 namespace Common {
 
-const wasm::common::NodeInfo& NodeInfoCache::getPeerById(
+const wasm::common::NodeInfo EmptyNodeInfo;
+
+namespace {
+
+bool getPeerNodeInfo(StringView peer_metadata_key,
+                 wasm::common::NodeInfo* node_info) {
+  google::protobuf::Struct metadata;
+  if (!getStructValue({"filter_state", peer_metadata_key}, &metadata)) {
+    LOG_DEBUG(absl::StrCat("cannot get metadata for: ", peer_metadata_key));
+    return false;
+  }
+
+  auto status =
+      ::Wasm::Common::extractNodeMetadata(metadata, node_info);
+  if (status != Status::OK) {
+    LOG_DEBUG(absl::StrCat("cannot parse peer node metadata ",
+                           metadata.DebugString(), ": ", status.ToString()));
+    return false;
+  }
+  return true;
+}
+
+}  // namespace
+
+NodeInfoPtr NodeInfoCache::getPeerById(
     StringView peer_metadata_id_key, StringView peer_metadata_key,
     std::string* peer_id) {
   if (!getStringValue({"filter_state", peer_metadata_id_key}, peer_id)) {
     LOG_DEBUG(absl::StrCat("cannot get metadata for: ", peer_metadata_id_key));
-    return cache_[""];
+    return EmptyNodeInfo;
+  }
+  if (isDisabled()) {
+    // Cache is disabled. Get node info directly from host.
+    NodeInfoPtr node_info_ptr = std::make_shared<wasm::common::NodeInfo>();
+    getPeerNodeInfo(peer_metadata_key, node_info.get());
+    return node_info_ptr;
   }
   auto nodeinfo_it = cache_.find(*peer_id);
   if (nodeinfo_it != cache_.end()) {
@@ -51,7 +81,7 @@ const wasm::common::NodeInfo& NodeInfoCache::getPeerById(
   google::protobuf::Struct metadata;
   if (!getStructValue({"filter_state", peer_metadata_key}, &metadata)) {
     LOG_DEBUG(absl::StrCat("cannot get metadata for: ", peer_metadata_key));
-    return cache_[""];
+    return EmptyNodeInfo;
   }
 
   auto status =
@@ -59,15 +89,21 @@ const wasm::common::NodeInfo& NodeInfoCache::getPeerById(
   if (status != Status::OK) {
     LOG_DEBUG(absl::StrCat("cannot parse peer node metadata ",
                            metadata.DebugString(), ": ", status.ToString()));
-    return cache_[""];
+    return EmptyNodeInfo;
   }
 
   return cache_[*peer_id];
 }
 
-const wasm::common::NodeInfo& NodeInfoCache::getPeerById(
+NodeInfoPtr NodeInfoCache::getPeerById(
     absl::string_view peer_metadata_id_key,
     absl::string_view peer_metadata_key) {
+  if (isDisabled()) {
+    // Cache is disabled. Get node info directly from host.
+    NodeInfoPtr node_info_ptr = std::make_shared<wasm::common::NodeInfo>();
+    getPeerNodeInfo(peer_metadata_key, node_info.get());
+    return node_info_ptr;
+  }
   std::string peer_id;
   return getPeerById(peer_metadata_id_key, peer_metadata_key, &peer_id);
 }

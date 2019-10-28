@@ -149,6 +149,9 @@ bool StackdriverRootContext::onConfigure(
     edge_report_duration_nanos_ = kDefaultEdgeReportDurationNanoseconds;
   }
 
+  node_info_cache_.setMaxCacheSize(config_.disable_peer_cache() ? 
+            -1 : config_.max_peer_cache_size());
+
   // Register OC Stackdriver exporter and views to be exported.
   // Note exporter and views are global singleton so they should only be
   // registered once.

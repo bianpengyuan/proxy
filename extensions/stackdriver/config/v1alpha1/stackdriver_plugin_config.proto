@@ -20,7 +20,7 @@ package stackdriver.config.v1alpha1;
 import "google/protobuf/duration.proto";
 
 message PluginConfig {
-  // next id: 5
+  // next id: 7
 
   // Optional. Controls whether to export server access log.
   bool disable_server_access_logging = 1;
@@ -38,4 +38,12 @@ message PluginConfig {
   // edges service to report edges. The minimum configurable duration is `10s`.
   // The default duration is `10m`.
   google.protobuf.Duration mesh_edges_reporting_duration = 4;
+
+  // Used to turn off peer node info cache. Peer node info will be fetched from the host for every request.
+  bool disable_peer_cache = 5;
+
+  // maximum size of the peer metadata cache.
+  // A long lived proxy that connects with many transient peers can build up a
+  // large cache.
+  int32 max_peer_cache_size = 6;
 }
