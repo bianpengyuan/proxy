@@ -39,6 +39,23 @@ envoy_cc_library(
     visibility = ["//visibility:public"],
     deps = [
         ":node_info_cc_proto",
+        ":request_info",
+        "@com_google_protobuf//:protobuf",
+        "@envoy//source/extensions/common/wasm/null:null_plugin_lib",
+    ],
+)
+
+envoy_cc_library(
+    name = "request_info",
+    srcs = [
+        "request_info.cc",
+    ],
+    hdrs = [
+        "request_info.h",
+    ],
+    repository = "@envoy",
+    visibility = ["//visibility:public"],
+    deps = [
         "@com_google_protobuf//:protobuf",
         "@envoy//source/extensions/common/wasm/null:null_plugin_lib",
     ],

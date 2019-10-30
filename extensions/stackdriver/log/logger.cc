@@ -87,15 +87,26 @@ void Logger::addLogEntry(const ::Wasm::Common::RequestInfo& request_info,
   (*label_map)["source_workload"] = peer_node_info.workload_name();
   (*label_map)["source_namespace"] = peer_node_info.namespace_();
 
-  (*label_map)["request_operation"] = request_info.request_operation;
   (*label_map)["destination_service_host"] =
       request_info.destination_service_host;
   (*label_map)["response_flag"] = request_info.response_flag;
-  (*label_map)["protocol"] = request_info.request_protocol;
   (*label_map)["destination_principal"] = request_info.destination_principal;
   (*label_map)["source_principal"] = request_info.source_principal;
   (*label_map)["service_authentication_policy"] =
       request_info.mTLS ? "true" : "false";
+
+  // Insert HTTPRequest
+  auto http_request = new_entry->mutable_http_request();
+  http_request->set_request_method(request_info.request_operation);
+  http_request->set_protocol(request_info.request_protocol);
+  // TODO: use requestComplete in stream info.
+  double latency_s =
+      double(request_info.end_timestamp - request_info.start_timestamp) /
+      Stackdriver::Common::kNanosecondsPerSecond;
+  http_request->set_latency(absl::StrCat(std::to_string(latency_s), "s"));
+  http_request->set_referer(getStringValue("request", ));
+
+  // Insert trace headers, if exist.
 
   // Accumulate estimated size of the request. If the current request exceeds
   // the size limit, flush the request out.
