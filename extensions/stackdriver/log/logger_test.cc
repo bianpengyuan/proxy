@@ -71,22 +71,22 @@ wasm::common::NodeInfo peerNodeInfo() {
   return node_info;
 }
 
-::Wasm::Common::RequestInfo requestInfo() {
-  ::Wasm::Common::RequestInfo request_info;
-  request_info.start_timestamp = 0;
-  request_info.request_operation = "GET";
-  request_info.destination_service_host = "httpbin.org";
-  request_info.response_flag = "-";
-  request_info.request_protocol = "HTTP";
-  request_info.destination_principal = "destination_principal";
-  request_info.source_principal = "source_principal";
-  request_info.mTLS = true;
-  return request_info;
+::Wasm::Common::LogInfo logInfo() {
+  ::Wasm::Common::LogInfo log_info;
+  log_info.start_timestamp = 0;
+  log_info.request_operation = "GET";
+  log_info.destination_service_host = "httpbin.org";
+  log_info.response_flag = "-";
+  log_info.request_protocol = "HTTP";
+  log_info.destination_principal = "destination_principal";
+  log_info.source_principal = "source_principal";
+  log_info.mTLS = true;
+  return log_info;
 }
 
 google::logging::v2::WriteLogEntriesRequest expectedRequest(
     int log_entry_count) {
-  auto request_info = requestInfo();
+  auto log_info = logInfo();
   auto peer_node_info = peerNodeInfo();
   auto node_info = nodeInfo();
   google::logging::v2::WriteLogEntriesRequest req;
@@ -109,15 +109,15 @@ google::logging::v2::WriteLogEntriesRequest expectedRequest(
     (*label_map)["source_workload"] = peer_node_info.workload_name();
     (*label_map)["source_namespace"] = peer_node_info.namespace_();
 
-    (*label_map)["request_operation"] = request_info.request_operation;
+    (*label_map)["request_operation"] = log_info.request_operation;
     (*label_map)["destination_service_host"] =
-        request_info.destination_service_host;
-    (*label_map)["response_flag"] = request_info.response_flag;
-    (*label_map)["protocol"] = request_info.request_protocol;
-    (*label_map)["destination_principal"] = request_info.destination_principal;
-    (*label_map)["source_principal"] = request_info.source_principal;
+        log_info.destination_service_host;
+    (*label_map)["response_flag"] = log_info.response_flag;
+    (*label_map)["protocol"] = log_info.request_protocol;
+    (*label_map)["destination_principal"] = log_info.destination_principal;
+    (*label_map)["source_principal"] = log_info.source_principal;
     (*label_map)["service_authentication_policy"] =
-        request_info.mTLS ? "true" : "false";
+        log_info.mTLS ? "true" : "false";
   }
   return req;
 }
@@ -128,7 +128,7 @@ TEST(LoggerTest, TestWriteLogEntry) {
   auto exporter = std::make_unique<::testing::NiceMock<MockExporter>>();
   auto exporter_ptr = exporter.get();
   auto logger = std::make_unique<Logger>(nodeInfo(), std::move(exporter));
-  logger->addLogEntry(requestInfo(), peerNodeInfo());
+  logger->addLogEntry(logInfo(), peerNodeInfo());
   EXPECT_CALL(*exporter_ptr, exportLogs(::testing::_))
       .WillOnce(::testing::Invoke(
           [](const std::vector<std::unique_ptr<
@@ -147,7 +147,7 @@ TEST(LoggerTest, TestWriteLogEntryRotation) {
   auto exporter_ptr = exporter.get();
   auto logger = std::make_unique<Logger>(nodeInfo(), std::move(exporter), 900);
   for (int i = 0; i < 9; i++) {
-    logger->addLogEntry(requestInfo(), peerNodeInfo());
+    logger->addLogEntry(logInfo(), peerNodeInfo());
   }
   EXPECT_CALL(*exporter_ptr, exportLogs(::testing::_))
       .WillOnce(::testing::Invoke(

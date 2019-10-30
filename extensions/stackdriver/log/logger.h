@@ -19,6 +19,7 @@
 #include <vector>
 
 #include "extensions/common/context.h"
+#include "extensions/common/log_info.h"
 #include "extensions/stackdriver/log/exporter.h"
 #include "google/logging/v2/logging.pb.h"
 
@@ -44,7 +45,7 @@ class Logger {
 
   // Add a new log entry based on the given request information and peer node
   // information.
-  void addLogEntry(const ::Wasm::Common::RequestInfo &request_info,
+  void addLogEntry(::Wasm::Common::LogInfo &log_info,
                    const ::wasm::common::NodeInfo &peer_node_info);
 
   // Export and clean the buffered WriteLogEntriesRequests.

@@ -22,6 +22,7 @@
 #include "extensions/stackdriver/edges/edges.pb.h"
 #include "extensions/stackdriver/edges/mesh_edges_service_client.h"
 #include "google/protobuf/util/time_util.h"
+#include "extensions/common/log_info.h"
 
 namespace Extensions {
 namespace Stackdriver {
@@ -59,7 +60,7 @@ class EdgeReporter {
   // addEdge creates a traffic assertion (aka an edge) based on the
   // the supplied request / peer info. The new edge is added to the
   // pending request that will be sent with all generated edges.
-  void addEdge(const ::Wasm::Common::RequestInfo &request_info,
+  void addEdge(::Wasm::Common::LogInfo &log_info,
                const std::string &peer_metadata_id_key,
                const ::wasm::common::NodeInfo &peer_node_info);
 

@@ -31,16 +31,47 @@ envoy_cc_library(
     name = "context",
     srcs = [
         "context.cc",
+        "log_info.cc",
     ],
     hdrs = [
         "context.h",
+        "log_info.h",
     ],
     repository = "@envoy",
     visibility = ["//visibility:public"],
     deps = [
+        ":log_info_cc_proto",
         ":node_info_cc_proto",
         "@com_google_protobuf//:protobuf",
         "@envoy//source/extensions/common/wasm/null:null_plugin_lib",
+    ],
+)
+
+envoy_cc_library(
+    name = "mock_log_info",
+    hdrs = [
+        "mock_log_info.h",
+    ],
+    repository = "@envoy",
+    visibility = ["//visibility:public"],
+    deps = [
+        ":context",
+    ],
+)
+
+cc_proto_library(
+    name = "log_info_cc_proto",
+    visibility = ["//visibility:public"],
+    deps = ["log_info_proto"],
+)
+
+proto_library(
+    name = "log_info_proto",
+    srcs = ["log_info.proto"],
+    deps = [
+        "@com_google_protobuf//:duration_proto",
+        "@com_google_protobuf//:timestamp_proto",
+        "@com_google_protobuf//:wrappers_proto",
     ],
 )
 

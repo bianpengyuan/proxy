@@ -53,7 +53,7 @@ using stackdriver::config::v1alpha1::PluginConfig;
 using ::Wasm::Common::kDownstreamMetadataKey;
 using ::Wasm::Common::kUpstreamMetadataKey;
 using ::wasm::common::NodeInfo;
-using ::Wasm::Common::RequestInfo;
+using ::Wasm::Common::LogInfo;
 
 constexpr char kStackdriverExporter[] = "stackdriver_exporter";
 constexpr char kExporterRegistered[] = "registered";
@@ -183,12 +183,12 @@ void StackdriverRootContext::onTick() {
   }
 }
 
-void StackdriverRootContext::record(const RequestInfo &request_info,
+void StackdriverRootContext::record(LogInfo &log_info,
                                     const NodeInfo &peer_node_info) {
   ::Extensions::Stackdriver::Metric::record(isOutbound(), local_node_info_,
-                                            peer_node_info, request_info);
+                                            peer_node_info, log_info);
   if (enableServerAccessLog()) {
-    logger_->addLogEntry(request_info, peer_node_info);
+    logger_->addLogEntry(log_info, peer_node_info);
   }
   if (enableEdgeReporting()) {
     std::string peer_id;
@@ -200,7 +200,7 @@ void StackdriverRootContext::record(const RequestInfo &request_info,
           "; skipping edge."));
       return;
     }
-    edge_reporter_->addEdge(request_info, peer_id, peer_node_info);
+    edge_reporter_->addEdge(log_info, peer_id, peer_node_info);
   }
 }
 
@@ -219,25 +219,6 @@ inline bool StackdriverRootContext::enableEdgeReporting() {
 // TODO(bianpengyuan) Add final export once root context supports onDone.
 // https://github.com/envoyproxy/envoy-wasm/issues/240
 
-FilterHeadersStatus StackdriverContext::onRequestHeaders() {
-  request_info_.start_timestamp = getCurrentTimeNanoseconds();
-  return FilterHeadersStatus::Continue;
-}
-
-FilterDataStatus StackdriverContext::onRequestBody(size_t body_buffer_length,
-                                                   bool) {
-  // TODO: switch to stream_info.bytesSent/bytesReceived to avoid extra compute.
-  request_info_.request_size += body_buffer_length;
-  return FilterDataStatus::Continue;
-}
-
-FilterDataStatus StackdriverContext::onResponseBody(size_t body_buffer_length,
-                                                    bool) {
-  // TODO: switch to stream_info.bytesSent/bytesReceived to avoid extra compute.
-  request_info_.response_size += body_buffer_length;
-  return FilterDataStatus::Continue;
-}
-
 StackdriverRootContext *StackdriverContext::getRootContext() {
   RootContext *root = this->root();
   return dynamic_cast<StackdriverRootContext *>(root);
@@ -245,7 +226,6 @@ StackdriverRootContext *StackdriverContext::getRootContext() {
 
 void StackdriverContext::onLog() {
   bool isOutbound = getRootContext()->isOutbound();
-  ::Wasm::Common::populateHTTPRequestInfo(isOutbound, &request_info_);
 
   auto key = isOutbound ? kUpstreamMetadataKey : kDownstreamMetadataKey;
 
@@ -262,7 +242,7 @@ void StackdriverContext::onLog() {
   }
 
   // Record telemetry based on request info.
-  getRootContext()->record(request_info_, peer_node_info_);
+  getRootContext()->record(*log_info_, peer_node_info_);
 }
 
 }  // namespace Stackdriver

@@ -73,29 +73,34 @@ Logger::Logger(const ::wasm::common::NodeInfo& local_node_info,
   exporter_ = std::move(exporter);
 }
 
-void Logger::addLogEntry(const ::Wasm::Common::RequestInfo& request_info,
+void Logger::addLogEntry(::Wasm::Common::LogInfo& log_info,
                          const ::wasm::common::NodeInfo& peer_node_info) {
   // create a new log entry
   auto* log_entries = log_entries_request_->mutable_entries();
   auto* new_entry = log_entries->Add();
 
-  *new_entry->mutable_timestamp() =
-      TimeUtil::NanosecondsToTimestamp(request_info.start_timestamp);
+  *new_entry->mutable_timestamp() = log_info.requestTimestamp();
   new_entry->set_severity(::google::logging::type::INFO);
   auto label_map = new_entry->mutable_labels();
   (*label_map)["source_name"] = peer_node_info.name();
   (*label_map)["source_workload"] = peer_node_info.workload_name();
   (*label_map)["source_namespace"] = peer_node_info.namespace_();
 
-  (*label_map)["request_operation"] = request_info.request_operation;
   (*label_map)["destination_service_host"] =
-      request_info.destination_service_host;
-  (*label_map)["response_flag"] = request_info.response_flag;
-  (*label_map)["protocol"] = request_info.request_protocol;
-  (*label_map)["destination_principal"] = request_info.destination_principal;
-  (*label_map)["source_principal"] = request_info.source_principal;
+      log_info.destinationServiceHost();
+  // (*label_map)["response_flag"] = log_info.ResponseFlag();
+  (*label_map)["destination_principal"] = log_info.destinationPrincipal();
+  (*label_map)["source_principal"] = log_info.sourcePrincipal();
   (*label_map)["service_authentication_policy"] =
-      request_info.mTLS ? "true" : "false";
+      log_info.mTLS() ? "true" : "false";
+
+  // Insert HTTPRequest
+  auto http_request = new_entry->mutable_http_request();
+  http_request->set_request_method(log_info.requestOperation());
+  http_request->set_protocol(log_info.requestProtocol());
+  *http_request->mutable_latency() = log_info.duration();
+
+  // Insert trace headers, if exist.
 
   // Accumulate estimated size of the request. If the current request exceeds
   // the size limit, flush the request out.
