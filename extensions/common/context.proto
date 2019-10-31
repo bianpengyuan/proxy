@@ -22,8 +22,8 @@ import "google/protobuf/duration.proto";
 package wasm.common;
 
 message Context {
-  google.protobuf.Timestamp start_timestamp = 1;
-  google.protobuf.Timestamp end_timestamp = 2;
+  google.protobuf.Timestamp request_timestamp = 1;
+  google.protobuf.Timestamp response_timestamp = 2;
   google.protobuf.Int64Value request_size = 3;
   google.protobuf.Int64Value response_size = 4;
   google.protobuf.Int64Value destination_port = 5;

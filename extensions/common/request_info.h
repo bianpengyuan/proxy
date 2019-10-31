@@ -28,12 +28,12 @@ class RequestInfo {
   virtual ~RequestInfo(){};
 
   virtual google::protobuf::Timestamp startTimestamp() = 0;
-  virtual google::protobuf::Timestamp endTimestamp() = 0;
+  virtual google::protobuf::Timestamp responseTimestamp() = 0;
   virtual int64_t requestSize() = 0;
   virtual int64_t responseSize() = 0;
   virtual int64_t destinationPort() = 0;
   virtual const std::string& requestProtocol() = 0;
-  virtual uint32_t responseCode() = 0;
+  virtual int64_t responseCode() = 0;
   virtual const std::string& responseFlag() = 0;
   virtual const std::string& destinationServiceHost() = 0;
   virtual const std::string& destiantionServiceName() = 0;
@@ -43,8 +43,8 @@ class RequestInfo {
   virtual const std::string& destinationPrincipal() = 0;
   virtual const std::string& rbacPermissivePolicyID() = 0;
   virtual const std::string& rbacPermissiveEngineResult() = 0;
-  virtual int64_t duration() = 0;
-  virtual int64_t responseDuration() = 0;
+  virtual google::protobuf::Duration duration() = 0;
+  virtual google::protobuf::Duration responseDuration() = 0;
   virtual const std::string& requestedServerName() = 0;
   virtual bool isOutbound() = 0;
 
@@ -68,12 +68,12 @@ class RequestInfoImpl : RequestInfo {
   ~RequestInfoImpl() {}
 
   google::protobuf::Timestamp startTimestamp() override;
-  google::protobuf::Timestamp endTimestamp() override;
+  google::protobuf::Timestamp responseTimestamp() override;
   int64_t requestSize() override;
   int64_t responseSize() override;
   int64_t destinationPort() override;
   const std::string& requestProtocol() override;
-  uint32_t responseCode() override;
+  int64_t responseCode() override;
   const std::string& responseFlag() override;
   const std::string& destinationServiceHost() override;
   const std::string& destiantionServiceName() override;
@@ -83,8 +83,8 @@ class RequestInfoImpl : RequestInfo {
   const std::string& destinationPrincipal() override;
   const std::string& rbacPermissivePolicyID() override;
   const std::string& rbacPermissiveEngineResult() override;
-  int64_t duration() override;
-  int64_t responseDuration() override;
+  google::protobuf::Duration duration() override;
+  google::protobuf::Duration responseDuration() override;
   const std::string& requestedServerName() override;
   bool isOutbound() override;
 
