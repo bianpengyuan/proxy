@@ -18,18 +18,20 @@
 #include <string>
 #include <unordered_map>
 
+#include "extensions/common/context.pb.h"
+
 namespace Wasm {
 namespace Common {
 
 class RequestInfo {
  public:
-  virtual ~RequestInfo() {};
+  virtual ~RequestInfo(){};
 
-  virtual int64_t startTimestamp() = 0;
-  virtual int64_t endTimestamp() = 0;
+  virtual google::protobuf::Timestamp startTimestamp() = 0;
+  virtual google::protobuf::Timestamp endTimestamp() = 0;
   virtual int64_t requestSize() = 0;
   virtual int64_t responseSize() = 0;
-  virtual uint32_t destinationPort() = 0;
+  virtual int64_t destinationPort() = 0;
   virtual const std::string& requestProtocol() = 0;
   virtual uint32_t responseCode() = 0;
   virtual const std::string& responseFlag() = 0;
@@ -44,6 +46,7 @@ class RequestInfo {
   virtual int64_t duration() = 0;
   virtual int64_t responseDuration() = 0;
   virtual const std::string& requestedServerName() = 0;
+  virtual bool isOutbound() = 0;
 
   // Important headers
   virtual const std::string& referer() = 0;
@@ -54,7 +57,8 @@ class RequestInfo {
   virtual const std::string& spanID() = 0;
   virtual bool traceSampled() = 0;
 
-  // TODO(bianpengyuan): remove these two setters when start/end timestamp is ready in upstream API.
+  // TODO(bianpengyuan): remove these two setters when start/end timestamp is
+  // ready in upstream API.
   virtual void setStartTimestamp() = 0;
   virtual void setEndTimestmap() = 0;
 };
@@ -63,40 +67,43 @@ class RequestInfo {
 class RequestInfoImpl : RequestInfo {
   ~RequestInfoImpl() {}
 
-  int64_t startTimestamp();
-  int64_t endTimestamp();
-  int64_t requestSize();
-  int64_t responseSize();
-  uint32_t destinationPort();
-  const std::string& requestProtocol();
-  uint32_t responseCode();
-  const std::string& responseFlag();
-  const std::string& destinationServiceHost();
-  const std::string& destiantionServiceName();
-  const std::string& requestOperation();
-  bool mTLS();
-  const std::string& sourcePrincipal();
-  const std::string& destinationPrincipal();
-  const std::string& rbacPermissivePolicyID();
-  const std::string& rbacPermissiveEngineResult();
-  int64_t duration();
-  int64_t responseDuration();
-  const std::string& requestedServerName();
+  google::protobuf::Timestamp startTimestamp() override;
+  google::protobuf::Timestamp endTimestamp() override;
+  int64_t requestSize() override;
+  int64_t responseSize() override;
+  int64_t destinationPort() override;
+  const std::string& requestProtocol() override;
+  uint32_t responseCode() override;
+  const std::string& responseFlag() override;
+  const std::string& destinationServiceHost() override;
+  const std::string& destiantionServiceName() override;
+  const std::string& requestOperation() override;
+  bool mTLS() override;
+  const std::string& sourcePrincipal() override;
+  const std::string& destinationPrincipal() override;
+  const std::string& rbacPermissivePolicyID() override;
+  const std::string& rbacPermissiveEngineResult() override;
+  int64_t duration() override;
+  int64_t responseDuration() override;
+  const std::string& requestedServerName() override;
+  bool isOutbound() override;
 
   // Important headers
-  const std::string& referer();
-  const std::string& userAgent();
-  const std::string& url();
-  const std::string& requestID();
-  const std::string& traceID();
-  const std::string& spanID();
-  bool traceSampled();
+  const std::string& referer() override;
+  const std::string& userAgent() override;
+  const std::string& url() override;
+  const std::string& requestID() override;
+  const std::string& traceID() override;
+  const std::string& spanID() override;
+  bool traceSampled() override;
 
  private:
-  std::unordered_map<std::string, std::string> string_attributes_;
-  std::unordered_map<std::string, bool> boolean_attributes_;
-  std::unordered_map<std::string, int64_t> int_attributes_;
-  std::unordered_map<std::string, double> float_attributes_;  
+  ::wasm::common::Context context_;
+
+  //   std::unordered_map<int, std::string> string_attributes_;
+  //   std::unordered_map<int, bool> boolean_attributes_;
+  //   std::unordered_map<int, int64_t> int_attributes_;
+  //   std::unordered_map<int, double> float_attributes_;
 };
 
 }  // namespace Common

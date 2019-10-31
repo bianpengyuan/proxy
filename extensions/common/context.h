@@ -51,12 +51,12 @@ const std::set<std::string> kGrpcContentTypes{
 
 // RequestContext contains all the information available in the request.
 // Some or all part may be populated depending on need.
-struct RequestContext {
-  const bool outbound;
-  const wasm::common::NodeInfo& source;
-  const wasm::common::NodeInfo& destination;
-  const Common::RequestInfo& request;
-};
+// struct RequestContext {
+//   const bool outbound;
+//   const wasm::common::NodeInfo& source;
+//   const wasm::common::NodeInfo& destination;
+//   const Common::RequestInfo& request;
+// };
 
 // TrafficDirection is a mirror of envoy xDS traffic direction.
 enum class TrafficDirection : int64_t {
@@ -82,7 +82,7 @@ google::protobuf::util::Status extractLocalNodeMetadata(
 
 // populateHTTPRequestInfo populates the RequestInfo struct. It needs access to
 // the request context.
-void populateHTTPRequestInfo(bool outbound, RequestInfo* request_info);
+// void populateHTTPRequestInfo(bool outbound, RequestInfo* request_info);
 
 // Extracts node metadata value. It looks for values of all the keys
 // corresponding to EXCHANGE_KEYS in node_metadata and populates it in
