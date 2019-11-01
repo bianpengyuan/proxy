@@ -18,23 +18,23 @@
 #include <string>
 #include <unordered_map>
 
-#include "extensions/common/context.pb.h"
+#include "extensions/common/log_info.pb.h"
 
 namespace Wasm {
 namespace Common {
 
-class RequestInfo {
+class LogInfo {
  public:
-  virtual ~RequestInfo(){};
+  virtual ~LogInfo(){};
 
-  virtual google::protobuf::Timestamp requestTimestamp() = 0;
-  virtual google::protobuf::Timestamp responseTimestamp() = 0;
+  virtual const google::protobuf::Timestamp& requestTimestamp() = 0;
+  virtual const google::protobuf::Timestamp& responseTimestamp() = 0;
   virtual int64_t requestSize() = 0;
   virtual int64_t responseSize() = 0;
   virtual int64_t destinationPort() = 0;
   virtual const std::string& requestProtocol() = 0;
   virtual int64_t responseCode() = 0;
-  virtual const std::string& responseFlag() = 0;
+  // virtual const std::string& responseFlag() = 0;
   virtual const std::string& destinationServiceHost() = 0;
   virtual const std::string& destiantionServiceName() = 0;
   virtual const std::string& requestOperation() = 0;
@@ -43,8 +43,8 @@ class RequestInfo {
   virtual const std::string& destinationPrincipal() = 0;
   virtual const std::string& rbacPermissivePolicyID() = 0;
   virtual const std::string& rbacPermissiveEngineResult() = 0;
-  virtual google::protobuf::Duration duration() = 0;
-  virtual google::protobuf::Duration responseDuration() = 0;
+  virtual const google::protobuf::Duration& duration() = 0;
+  virtual const google::protobuf::Duration& responseDuration() = 0;
   virtual const std::string& requestedServerName() = 0;
   virtual bool isOutbound() = 0;
 
@@ -60,18 +60,18 @@ class RequestInfo {
   virtual bool b3TraceSampled() = 0;
 };
 
-// RequestInfo lazily load request related information.
-class RequestInfoImpl : public RequestInfo {
-  ~RequestInfoImpl() {}
+// LogInfo lazily load request related information.
+class LogInfoImpl : public LogInfo {
+  ~LogInfoImpl() {}
 
-  google::protobuf::Timestamp requestTimestamp() override;
-  google::protobuf::Timestamp responseTimestamp() override;
+  const google::protobuf::Timestamp& requestTimestamp() override;
+  const google::protobuf::Timestamp& responseTimestamp() override;
   int64_t requestSize() override;
   int64_t responseSize() override;
   int64_t destinationPort() override;
   const std::string& requestProtocol() override;
   int64_t responseCode() override;
-  const std::string& responseFlag() override;
+  // const std::string& responseFlag() override;
   const std::string& destinationServiceHost() override;
   const std::string& destiantionServiceName() override;
   const std::string& requestOperation() override;
@@ -80,8 +80,8 @@ class RequestInfoImpl : public RequestInfo {
   const std::string& destinationPrincipal() override;
   const std::string& rbacPermissivePolicyID() override;
   const std::string& rbacPermissiveEngineResult() override;
-  google::protobuf::Duration duration() override;
-  google::protobuf::Duration responseDuration() override;
+  const google::protobuf::Duration& duration() override;
+  const google::protobuf::Duration& responseDuration() override;
   const std::string& requestedServerName() override;
   bool isOutbound() override;
 
@@ -97,12 +97,7 @@ class RequestInfoImpl : public RequestInfo {
   bool b3TraceSampled() override;
 
  private:
-  ::wasm::common::Context context_;
-
-  //   std::unordered_map<int, std::string> string_attributes_;
-  //   std::unordered_map<int, bool> boolean_attributes_;
-  //   std::unordered_map<int, int64_t> int_attributes_;
-  //   std::unordered_map<int, double> float_attributes_;
+  ::wasm::common::LogInfo context_;
 };
 
 }  // namespace Common

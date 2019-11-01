@@ -22,6 +22,7 @@
 #include "google/protobuf/util/message_differencer.h"
 #include "google/protobuf/util/time_util.h"
 #include "gtest/gtest.h"
+#include "extensions/common/mock_log_info.h"
 
 namespace Extensions {
 namespace Stackdriver {
@@ -139,13 +140,6 @@ wasm::common::NodeInfo peerNodeInfo() {
   return node_info;
 }
 
-::Wasm::Common::RequestInfo requestInfo() {
-  ::Wasm::Common::RequestInfo request_info;
-  request_info.destination_service_host = "httpbin.org";
-  request_info.request_protocol = "HTTP";
-  return request_info;
-}
-
 ReportTrafficAssertionsRequest want() {
   ReportTrafficAssertionsRequest req;
   TextFormat::ParseFromString(kWantGrpcRequest, &req);
@@ -166,7 +160,10 @@ TEST(EdgesTest, TestAddEdge) {
 
   auto edges = std::make_unique<EdgeReporter>(
       nodeInfo(), std::move(test_client), TimeUtil::GetCurrentTime);
-  edges->addEdge(requestInfo(), "test", peerNodeInfo());
+  Wasm::Common::MockLogInfo log_info;
+  EXPECT_CALL(log_info, destinationServiceHost()).WillRepeatedly(testing::ReturnRef("httpbin.org"));
+  EXPECT_CALL(log_info, requestProtocol()).WillRepeatedly(testing::ReturnRef("HTTP"));
+  edges->addEdge(log_info, "test", peerNodeInfo());
   edges->reportEdges();
 
   // must ensure that we used the client to report the edges
@@ -192,9 +189,12 @@ TEST(EdgeReporterTest, TestRequestEdgeCache) {
   auto edges = std::make_unique<EdgeReporter>(
       nodeInfo(), std::move(test_client), TimeUtil::GetCurrentTime);
 
+  Wasm::Common::MockLogInfo log_info;
+  EXPECT_CALL(log_info, destinationServiceHost()).WillRepeatedly(testing::ReturnRef("httpbin.org"));
+  EXPECT_CALL(log_info, requestProtocol()).WillRepeatedly(testing::ReturnRef("HTTP"));
   // force at least three queued reqs + current (four total)
   for (int i = 0; i < 3500; i++) {
-    edges->addEdge(requestInfo(), "test", peerNodeInfo());
+    edges->addEdge(log_info, "test", peerNodeInfo());
   }
   edges->reportEdges();
 
@@ -217,9 +217,12 @@ TEST(EdgeReporterTest, TestPeriodicFlushAndCacheReset) {
   auto edges = std::make_unique<EdgeReporter>(
       nodeInfo(), std::move(test_client), TimeUtil::GetCurrentTime);
 
+  Wasm::Common::MockLogInfo log_info;
+  EXPECT_CALL(log_info, destinationServiceHost()).WillRepeatedly(testing::ReturnRef("httpbin.org"));
+  EXPECT_CALL(log_info, requestProtocol()).WillRepeatedly(testing::ReturnRef("HTTP"));
   // force at least three queued reqs + current (four total)
   for (int i = 0; i < 3500; i++) {
-    edges->addEdge(requestInfo(), "test", peerNodeInfo());
+    edges->addEdge(log_info, "test", peerNodeInfo());
     // flush on 1000, 2000, 3000
     if (i % 1000 == 0 && i > 0) {
       edges->reportEdges();
@@ -246,9 +249,13 @@ TEST(EdgeReporterTest, TestCacheMisses) {
   auto edges = std::make_unique<EdgeReporter>(
       nodeInfo(), std::move(test_client), TimeUtil::GetCurrentTime);
 
+  Wasm::Common::MockLogInfo log_info;
+  EXPECT_CALL(log_info, destinationServiceHost()).WillRepeatedly(testing::ReturnRef("httpbin.org"));
+  EXPECT_CALL(log_info, requestProtocol()).WillRepeatedly(testing::ReturnRef("HTTP"));
+
   // force at least three queued reqs + current (four total)
   for (int i = 0; i < 3500; i++) {
-    edges->addEdge(requestInfo(), std::to_string(i), peerNodeInfo());
+    edges->addEdge(log_info, std::to_string(i), peerNodeInfo());
   }
   edges->reportEdges();
 

@@ -45,29 +45,29 @@ using Envoy::Extensions::Common::Wasm::Null::Plugin::getValue;
 namespace Wasm {
 namespace Common {
 
-// const char kRbacFilterName[] = "envoy.filters.http.rbac";
-// const char kRbacPermissivePolicyIDField[] = "shadow_effective_policy_id";
-// const char kRbacPermissiveEngineResultField[] = "shadow_engine_result";
+const char kRbacFilterName[] = "envoy.filters.http.rbac";
+const char kRbacPermissivePolicyIDField[] = "shadow_effective_policy_id";
+const char kRbacPermissiveEngineResultField[] = "shadow_engine_result";
 
 namespace {
 
 // Extract fqdn from Istio cluster name, e.g.
 // inbound|9080|http|productpage.default.svc.cluster.local. If cluster name does
 // not follow Istio convention, fqdn will be left as empty string.
-// void extractFqdn(const std::string& cluster_name, std::string* fqdn) {
-//   const std::vector<std::string>& parts = absl::StrSplit(cluster_name, '|');
-//   if (parts.size() == 4) {
-//     *fqdn = parts[3];
-//   }
-// }
+void extractFqdn(const std::string& cluster_name, std::string* fqdn) {
+  const std::vector<std::string>& parts = absl::StrSplit(cluster_name, '|');
+  if (parts.size() == 4) {
+    *fqdn = parts[3];
+  }
+}
 
-// // Extract service name from service fqdn.
-// void extractServiceName(const std::string& fqdn, std::string* service_name) {
-//   const std::vector<std::string>& parts = absl::StrSplit(fqdn, '.');
-//   if (parts.size() > 0) {
-//     *service_name = parts[0];
-//   }
-// }
+// Extract service name from service fqdn.
+void extractServiceName(const std::string& fqdn, std::string* service_name) {
+  const std::vector<std::string>& parts = absl::StrSplit(fqdn, '.');
+  if (parts.size() > 0) {
+    *service_name = parts[0];
+  }
+}
 
 }  // namespace
 
@@ -133,69 +133,67 @@ google::protobuf::util::Status extractLocalNodeMetadata(
   return extractNodeMetadata(node, node_info);
 }
 
-// void populateHTTPRequestInfo(bool outbound, RequestInfo* request_info) {
-//   // TODO: switch to stream_info.requestComplete() to avoid extra compute.
-//   request_info->end_timestamp = getCurrentTimeNanoseconds();
+void populateHTTPRequestInfo(bool outbound, RequestInfo* request_info) {
+  // TODO: switch to stream_info.requestComplete() to avoid extra compute.
+  request_info->end_timestamp = getCurrentTimeNanoseconds();
 
-//   // Fill in request info.
-//   int64_t response_code = 0;
-//   if (getValue({"response", "code"}, &response_code)) {
-//     request_info->response_code = response_code;
-//   }
+  // Fill in request info.
+  int64_t response_code = 0;
+  if (getValue({"response", "code"}, &response_code)) {
+    request_info->response_code = response_code;
+  }
 
-//   if
-//   (kGrpcContentTypes.count(getHeaderMapValue(HeaderMapType::RequestHeaders,
-//                                                 kContentTypeHeaderKey)
-//                                   ->toString()) != 0) {
-//     request_info->request_protocol = kProtocolGRPC;
-//   } else {
-//     // TODO Add http/1.1, http/1.0, http/2 in a separate attribute.
-//     // http|grpc classification is compatible with Mixerclient
-//     request_info->request_protocol = kProtocolHTTP;
-//   }
+  if (kGrpcContentTypes.count(getHeaderMapValue(HeaderMapType::RequestHeaders,
+                                                kContentTypeHeaderKey)
+                                  ->toString()) != 0) {
+    request_info->request_protocol = kProtocolGRPC;
+  } else {
+    // TODO Add http/1.1, http/1.0, http/2 in a separate attribute.
+    // http|grpc classification is compatible with Mixerclient
+    request_info->request_protocol = kProtocolHTTP;
+  }
 
-//   // Try to get fqdn of destination service from cluster name. If not found,
-//   use
-//   // host header instead.
-//   std::string cluster_name = "";
-//   getStringValue({"cluster_name"}, &cluster_name);
-//   extractFqdn(cluster_name, &request_info->destination_service_host);
-//   if (request_info->destination_service_host.empty()) {
-//     // fallback to host header.
-//     request_info->destination_service_host =
-//         getHeaderMapValue(HeaderMapType::RequestHeaders, kAuthorityHeaderKey)
-//             ->toString();
-//   } else {
-//     // cluster name follows Istio convention, so extract out service name.
-//     extractServiceName(request_info->destination_service_host,
-//                        &request_info->destination_service_name);
-//   }
+  // Try to get fqdn of destination service from cluster name. If not found, use
+  // host header instead.
+  std::string cluster_name = "";
+  getStringValue({"cluster_name"}, &cluster_name);
+  extractFqdn(cluster_name, &request_info->destination_service_host);
+  if (request_info->destination_service_host.empty()) {
+    // fallback to host header.
+    request_info->destination_service_host =
+        getHeaderMapValue(HeaderMapType::RequestHeaders, kAuthorityHeaderKey)
+            ->toString();
+  } else {
+    // cluster name follows Istio convention, so extract out service name.
+    extractServiceName(request_info->destination_service_host,
+                       &request_info->destination_service_name);
+  }
 
-//   // Get rbac labels from dynamic metadata.
-//   getStringValue({"metadata", kRbacFilterName, kRbacPermissivePolicyIDField},
-//                  &request_info->rbac_permissive_policy_id);
-//   getStringValue(
-//       {"metadata", kRbacFilterName, kRbacPermissiveEngineResultField},
-//       &request_info->rbac_permissive_engine_result);
+  // Get rbac labels from dynamic metadata.
+  getStringValue({"metadata", kRbacFilterName, kRbacPermissivePolicyIDField},
+                 &request_info->rbac_permissive_policy_id);
+  getStringValue(
+      {"metadata", kRbacFilterName, kRbacPermissiveEngineResultField},
+      &request_info->rbac_permissive_engine_result);
 
-//   request_info->request_operation =
-//       getHeaderMapValue(HeaderMapType::RequestHeaders, kMethodHeaderKey)
-//           ->toString();
+  request_info->request_operation =
+      getHeaderMapValue(HeaderMapType::RequestHeaders, kMethodHeaderKey)
+          ->toString();
 
-//   int64_t destination_port = 0;
-//   std::string tls_version;
+  int64_t destination_port = 0;
+  std::string tls_version;
 
-//   if (outbound) {
-//     getValue({"upstream", "port"}, &destination_port);
-//     getValue({"upstream", "mtls"}, &request_info->mTLS);
-//     getStringValue({"upstream", "tls_version"}, &tls_version);
-//   } else {
-//     getValue({"destination", "port"}, &destination_port);
-//     getValue({"connection", "mtls"}, &request_info->mTLS);
-//     getStringValue({"connection", "tls_version"}, &tls_version);
-//   }
-//   request_info->destination_port = destination_port;
-// }
+  if (outbound) {
+    getValue({"upstream", "port"}, &destination_port);
+    getValue({"upstream", "mtls"}, &request_info->mTLS);
+    getStringValue({"upstream", "tls_version"}, &tls_version);
+  } else {
+    getValue({"destination", "port"}, &destination_port);
+    getValue({"connection", "mtls"}, &request_info->mTLS);
+    getStringValue({"connection", "tls_version"}, &tls_version);
+  }
+  request_info->destination_port = destination_port;
+}
 
 google::protobuf::util::Status extractNodeMetadataValue(
     const google::protobuf::Struct& node_metadata,

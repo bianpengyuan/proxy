@@ -65,7 +65,7 @@ class StackdriverRootContext : public RootContext {
   bool isOutbound();
 
   // Records telemetry based on the given request info.
-  void record(::Wasm::Common::RequestInfo& request_info,
+  void record(::Wasm::Common::LogInfo& log_info,
               const ::wasm::common::NodeInfo& peer_node_info);
 
  private:
@@ -101,20 +101,13 @@ class StackdriverRootContext : public RootContext {
 class StackdriverContext : public Context {
  public:
   StackdriverContext(uint32_t id, RootContext* root) :
-    Context(id, root), request_info_(new ::Wasm::Common::RequestInfoImpl) {}
+    Context(id, root), log_info_(new ::Wasm::Common::LogInfoImpl) {}
   void onLog() override;
-
-  // Stream filter callbacks.
-  FilterHeadersStatus onRequestHeaders() override;
-  FilterDataStatus onRequestBody(size_t body_buffer_length,
-                                 bool end_of_stream) override;
-  FilterDataStatus onResponseBody(size_t body_buffer_length,
-                                  bool end_of_stream) override;
 
  private:
   // Request information collected from stream callbacks, used when record
   // metrics and access logs.
-  std::unique_ptr<::Wasm::Common::RequestInfo> request_info_;
+  std::unique_ptr<::Wasm::Common::LogInfo> log_info_;
 
   // Peer node information extracted from peer node metadata header.
   ::wasm::common::NodeInfo peer_node_info_;

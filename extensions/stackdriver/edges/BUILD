@@ -93,6 +93,7 @@ envoy_cc_test(
     repository = "@envoy",
     deps = [
         ":edge_reporter",
+        "//extensions/common:mock_log_info",
         "@envoy//source/extensions/common/wasm:wasm_lib",
     ],
 )
