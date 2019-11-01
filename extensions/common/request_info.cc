@@ -34,6 +34,13 @@ using Envoy::Extensions::Common::Wasm::Null::Plugin::getStringValue;
 namespace Wasm {
 namespace Common {
 
+const char RbacFilterName[] = "envoy.filters.http.rbac";
+const char RbacPermissivePolicyIDField[] = "shadow_effective_policy_id";
+const char RbacPermissiveEngineResultField[] = "shadow_engine_result";
+const char B3TraceID[] = "X-B3-TraceId";
+const char B3SpanID[] = "X-B3-SpanId";
+const char B3TraceSampled[] = "X-B3-Sampled";
+
 namespace {
 
 // Extract fqdn from Istio cluster name, e.g.
@@ -70,7 +77,7 @@ bool RequestInfoImpl::isOutbound() {
   ;
 }
 
-google::protobuf::Timestamp RequestInfoImpl::startTimestamp() {
+google::protobuf::Timestamp RequestInfoImpl::requestTimestamp() {
   if (!context_.has_request_timestamp()) {
     getValue({"request", "time"}, context_.mutable_request_timestamp());
   }
@@ -158,24 +165,10 @@ int64_t RequestInfoImpl::responseCode() {
   return context_.response_code().value();
 }
 
-const std::string& RequestInfoImpl::responseFlag() {
-  if (context_.has_request_protocol()) {
-    return context_.request_protocol().value();
-  }
-
-  // TODO Add http/1.1, http/1.0, http/2 in a separate attribute.
-  // http|grpc classification is compatible with Mixerclient
-  if (kGrpcContentTypes.count(getHeaderMapValue(HeaderMapType::RequestHeaders,
-                                                kContentTypeHeaderKey)
-                                  ->toString()) != 0) {
-    context_.mutable_request_protocol()->set_value(kProtocolGRPC);
-  } else {
-    context_.mutable_request_protocol()->set_value(kProtocolHTTP);
-  }
-
-  // string_attributes_.emplace(RequestProtocolKey, proto);
-  return context_.request_protocol().value();
-}
+// const std::string& RequestInfoImpl::responseFlag() {
+//   // TODO
+//   return "";
+// }
 
 const std::string& RequestInfoImpl::destinationServiceHost() {
   if (!context_.has_destination_service_host()) {
@@ -206,25 +199,135 @@ const std::string& RequestInfoImpl::destiantionServiceName() {
   return context_.destination_service_name().value();
 }
 
-// const std::string& RequestInfoImpl::requestOperation() {
+const std::string& RequestInfoImpl::requestOperation() {
+  if (!context_.has_request_operation()) {
+    getStringValue({"request", "method"}, context_.mutable_request_operation()->mutable_value());
+  }
+  return context_.request_operation().value();
+}
 
-// }
+bool RequestInfoImpl::mTLS() {
+  if (!context_.has_mtls()) {
+    bool isMTLS = false;
+    getValue({"connection", "mtls"}, &isMTLS);
+    context_.mutable_mtls()->set_value(isMTLS);
+  }
+  return context_.mtls().value();
+}
 
-// bool RequestInfoImpl::mTLS() {}
-// const std::string& RequestInfoImpl::sourcePrincipal() {}
-// const std::string& RequestInfoImpl::destinationPrincipal() {}
-// const std::string& RequestInfoImpl::rbacPermissivePolicyID() {}
-// const std::string& RequestInfoImpl::rbacPermissiveEngineResult() {}
-// const std::string& RequestInfoImpl::requestedServerName() {}
+const std::string& RequestInfoImpl::sourcePrincipal() {
+  if (!context_.has_source_principal()) {
+    auto key = isOutbound() ? "uri_san_local_certificate" : "uri_san_peer_certificate";
+    getStringValue({"connection", key}, context_.mutable_source_principal()->mutable_value());
+  }
+  return context_.source_principal().value();
+}
 
-// // Important headers
-// const std::string& RequestInfoImpl::referer() {}
-// const std::string& RequestInfoImpl::userAgent() {}
-// const std::string& RequestInfoImpl::url() {}
-// const std::string& RequestInfoImpl::requestID() {}
-// const std::string& RequestInfoImpl::traceID() {}
-// const std::string& RequestInfoImpl::spanID() {}
-// bool RequestInfoImpl::traceSampled() {}
+const std::string& RequestInfoImpl::destinationPrincipal() {
+  if (!context_.has_destination_principal()) {
+    auto key = isOutbound() ? "uri_san_peer_certificate" : "uri_san_local_certificate";
+    getStringValue({"connection", key}, context_.mutable_destination_principal()->mutable_value());
+  }
+  return context_.destination_principal().value();
+}
+
+const std::string& RequestInfoImpl::rbacPermissivePolicyID() {
+  if (!context_.has_rbac_permissive_policy_id()) {
+    getStringValue({"metadata", RbacFilterName, RbacPermissivePolicyIDField},
+      context_.mutable_rbac_permissive_policy_id()->mutable_value());
+  }
+  return context_.rbac_permissive_policy_id().value();
+}
+
+const std::string& RequestInfoImpl::rbacPermissiveEngineResult() {
+  if (!context_.has_rbac_permissive_engine_result()) {
+    getStringValue({"metadata", RbacFilterName, RbacPermissiveEngineResultField},
+                  context_.mutable_rbac_permissive_engine_result()->mutable_value());
+  }
+  return context_.rbac_permissive_engine_result().value();
+}
+
+const std::string& RequestInfoImpl::requestedServerName() {
+  if (!context_.has_requested_server_name()) {
+    getStringValue({"connection", "requested_server_name"},
+                  context_.mutable_requested_server_name()->mutable_value());
+  }
+  return context_.requested_server_name().value();
+}
+
+const std::string& RequestInfoImpl::referer() {
+  if (!context_.has_referer()) {
+    getStringValue({"request", "referer"},
+                  context_.mutable_referer()->mutable_value());
+  }
+  return context_.referer().value();
+}
+
+const std::string& RequestInfoImpl::userAgent() {
+  if (!context_.has_user_agent()) {
+    getStringValue({"request", "user_agent"},
+                  context_.mutable_user_agent()->mutable_value());
+  }
+  return context_.user_agent().value();
+}
+
+const std::string& RequestInfoImpl::urlPath() {
+  if (!context_.has_url_path()) {
+    getStringValue({"request", "url_path"},
+                  context_.mutable_url_path()->mutable_value());
+  }
+  return context_.url_path().value();
+}
+
+const std::string& RequestInfoImpl::requestHost() {
+  if (!context_.has_url_host()) {
+    getStringValue({"request", "host"},
+                  context_.mutable_url_host()->mutable_value());
+  }
+  return context_.url_host().value();
+}
+
+const std::string& RequestInfoImpl::requestScheme() {
+  if (!context_.has_url_scheme()) {
+    getStringValue({"request", "scheme"},
+                  context_.mutable_url_scheme()->mutable_value());
+  }
+  return context_.url_scheme().value();
+}
+
+const std::string& RequestInfoImpl::requestID() {
+  if (!context_.has_request_id()) {
+    getStringValue({"request", "id"},
+                  context_.mutable_request_id()->mutable_value());
+  }
+  return context_.request_id().value();
+}
+
+const std::string& RequestInfoImpl::b3SpanID() {
+  if (!context_.has_b3_span_id()) {
+    getStringValue({"request", "headers", B3SpanID}, 
+      context_.mutable_b3_span_id()->mutable_value());
+  }
+  return context_.b3_span_id().value();
+}
+
+const std::string& RequestInfoImpl::b3TraceID() {
+  if (!context_.has_b3_span_id()) {
+    getStringValue({"request", "headers", B3TraceID}, 
+      context_.mutable_b3_span_id()->mutable_value());
+  }
+  return context_.b3_span_id().value();
+}
+
+
+bool RequestInfoImpl::b3TraceSampled() {
+  if (!context_.has_b3_trace_sampled()) {
+    bool sampled = false;
+    getValue({"request", "headers", B3TraceSampled}, &sampled);
+    context_.mutable_b3_trace_sampled()->set_value(sampled);
+  }
+  return context_.b3_trace_sampled().value();
+}
 
 }  // namespace Common
 }  // namespace Wasm

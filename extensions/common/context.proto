@@ -32,7 +32,7 @@ message Context {
   google.protobuf.Int64Value response_code = 7;
   google.protobuf.StringValue response_flag = 8;
   google.protobuf.StringValue destination_service_host = 9;
-  google.protobuf.StringValue destiantion_service_name = 10;
+  google.protobuf.StringValue destination_service_name = 10;
   google.protobuf.StringValue request_operation = 11;
   google.protobuf.BoolValue mtls = 12;
   google.protobuf.StringValue source_principal = 13;
@@ -44,7 +44,14 @@ message Context {
   google.protobuf.StringValue requested_server_name = 19;
   
   google.protobuf.Int64Value traffic_direction = 20;
-  
-  map<string, string> headers = 21;
-  map<string, string> trailers = 22;
+
+  google.protobuf.StringValue referer = 21;
+  google.protobuf.StringValue user_agent = 22;
+  google.protobuf.StringValue url_path = 23;
+  google.protobuf.StringValue url_host = 24;
+  google.protobuf.StringValue url_scheme = 25;
+  google.protobuf.StringValue request_id = 26;
+  google.protobuf.StringValue b3_trace_id = 27;
+  google.protobuf.StringValue b3_span_id = 28;
+  google.protobuf.BoolValue b3_trace_sampled = 29;
 };

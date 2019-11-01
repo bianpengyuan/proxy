@@ -27,7 +27,7 @@ class RequestInfo {
  public:
   virtual ~RequestInfo(){};
 
-  virtual google::protobuf::Timestamp startTimestamp() = 0;
+  virtual google::protobuf::Timestamp requestTimestamp() = 0;
   virtual google::protobuf::Timestamp responseTimestamp() = 0;
   virtual int64_t requestSize() = 0;
   virtual int64_t responseSize() = 0;
@@ -51,23 +51,20 @@ class RequestInfo {
   // Important headers
   virtual const std::string& referer() = 0;
   virtual const std::string& userAgent() = 0;
-  virtual const std::string& url() = 0;
+  virtual const std::string& urlPath() = 0;
+  virtual const std::string& requestHost() = 0;
+  virtual const std::string& requestScheme() = 0;
   virtual const std::string& requestID() = 0;
-  virtual const std::string& traceID() = 0;
-  virtual const std::string& spanID() = 0;
-  virtual bool traceSampled() = 0;
-
-  // TODO(bianpengyuan): remove these two setters when start/end timestamp is
-  // ready in upstream API.
-  virtual void setStartTimestamp() = 0;
-  virtual void setEndTimestmap() = 0;
+  virtual const std::string& b3TraceID() = 0;
+  virtual const std::string& b3SpanID() = 0;
+  virtual bool b3TraceSampled() = 0;
 };
 
 // RequestInfo lazily load request related information.
-class RequestInfoImpl : RequestInfo {
+class RequestInfoImpl : public RequestInfo {
   ~RequestInfoImpl() {}
 
-  google::protobuf::Timestamp startTimestamp() override;
+  google::protobuf::Timestamp requestTimestamp() override;
   google::protobuf::Timestamp responseTimestamp() override;
   int64_t requestSize() override;
   int64_t responseSize() override;
@@ -91,11 +88,13 @@ class RequestInfoImpl : RequestInfo {
   // Important headers
   const std::string& referer() override;
   const std::string& userAgent() override;
-  const std::string& url() override;
+  const std::string& urlPath() override;
+  const std::string& requestHost() override;
+  const std::string& requestScheme() override;
   const std::string& requestID() override;
-  const std::string& traceID() override;
-  const std::string& spanID() override;
-  bool traceSampled() override;
+  const std::string& b3TraceID() override;
+  const std::string& b3SpanID() override;
+  bool b3TraceSampled() override;
 
  private:
   ::wasm::common::Context context_;
