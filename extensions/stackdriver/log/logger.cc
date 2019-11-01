@@ -92,7 +92,8 @@ void Logger::addLogEntry(::Wasm::Common::LogInfo& log_info,
   (*label_map)["destination_principal"] = log_info.destinationPrincipal();
   (*label_map)["source_principal"] = log_info.sourcePrincipal();
   (*label_map)["service_authentication_policy"] =
-      log_info.mTLS() ? "true" : "false";
+      std::string(::Wasm::Common::AuthenticationPolicyString(
+          request_info.service_auth_policy));
 
   // Insert HTTPRequest
   auto http_request = new_entry->mutable_http_request();

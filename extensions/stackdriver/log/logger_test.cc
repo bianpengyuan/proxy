@@ -117,7 +117,8 @@ google::logging::v2::WriteLogEntriesRequest expectedRequest(
     (*label_map)["destination_principal"] = log_info.destination_principal;
     (*label_map)["source_principal"] = log_info.source_principal;
     (*label_map)["service_authentication_policy"] =
-        log_info.mTLS ? "true" : "false";
+        std::string(::Wasm::Common::AuthenticationPolicyString(
+            request_info.service_auth_policy));
   }
   return req;
 }

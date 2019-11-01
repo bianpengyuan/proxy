@@ -48,6 +48,20 @@ envoy_cc_library(
 )
 
 envoy_cc_library(
+    name = "node_info_cache",
+    srcs = [
+        "node_info_cache.cc",
+    ],
+    hdrs = [
+        "node_info_cache.h",
+    ],
+    deps = [
+        ":node_info_cc_proto",
+        "@envoy//source/extensions/common/wasm/null:null_plugin_lib",
+    ],
+)
+
+envoy_cc_library(
     name = "mock_log_info",
     hdrs = [
         "mock_log_info.h",

@@ -50,7 +50,9 @@ using Extensions::Stackdriver::Edges::MeshEdgesServiceClientImpl;
 using Extensions::Stackdriver::Log::ExporterImpl;
 using ::Extensions::Stackdriver::Log::Logger;
 using stackdriver::config::v1alpha1::PluginConfig;
+using ::Wasm::Common::kDownstreamMetadataIdKey;
 using ::Wasm::Common::kDownstreamMetadataKey;
+using ::Wasm::Common::kUpstreamMetadataIdKey;
 using ::Wasm::Common::kUpstreamMetadataKey;
 using ::wasm::common::NodeInfo;
 using ::Wasm::Common::LogInfo;
@@ -104,7 +106,7 @@ bool StackdriverRootContext::onConfigure(
   Status status =
       JsonStringToMessage(configuration->toString(), &config_, json_options);
   if (status != Status::OK) {
-    logWarn("Cannot parse Stackdriver plugin configuraiton JSON string " +
+    logWarn("Cannot parse Stackdriver plugin configuration JSON string " +
             configuration->toString() + ", " + status.message().ToString());
     return false;
   }
@@ -147,6 +149,8 @@ bool StackdriverRootContext::onConfigure(
     edge_report_duration_nanos_ = kDefaultEdgeReportDurationNanoseconds;
   }
 
+  node_info_cache_.setMaxCacheSize(config_.max_peer_cache_size());
+
   // Register OC Stackdriver exporter and views to be exported.
   // Note exporter and views are global singleton so they should only be
   // registered once.
@@ -184,7 +188,10 @@ void StackdriverRootContext::onTick() {
 }
 
 void StackdriverRootContext::record(LogInfo &log_info,
-                                    const NodeInfo &peer_node_info) {
+                   const RequestInfo& request_info) {
+  const auto peer_node_info_ptr = getPeerNode();
+  const NodeInfo& peer_node_info =
+      peer_node_info_ptr ? *peer_node_info_ptr : ::Wasm::Common::EmptyNodeInfo;
   ::Extensions::Stackdriver::Metric::record(isOutbound(), local_node_info_,
                                             peer_node_info, log_info);
   if (enableServerAccessLog()) {
@@ -208,6 +215,15 @@ inline bool StackdriverRootContext::isOutbound() {
   return direction_ == ::Wasm::Common::TrafficDirection::Outbound;
 }
 
+::Wasm::Common::NodeInfoPtr StackdriverRootContext::getPeerNode() {
+  bool isOutbound = this->isOutbound();
+  const auto& id_key =
+      isOutbound ? kUpstreamMetadataIdKey : kDownstreamMetadataIdKey;
+  const auto& metadata_key =
+      isOutbound ? kUpstreamMetadataKey : kDownstreamMetadataKey;
+  return node_info_cache_.getPeerById(id_key, metadata_key);
+}
+
 inline bool StackdriverRootContext::enableServerAccessLog() {
   return !config_.disable_server_access_logging() && !isOutbound();
 }
@@ -225,24 +241,8 @@ StackdriverRootContext *StackdriverContext::getRootContext() {
 }
 
 void StackdriverContext::onLog() {
-  bool isOutbound = getRootContext()->isOutbound();
-
-  auto key = isOutbound ? kUpstreamMetadataKey : kDownstreamMetadataKey;
-
-  // Fill in peer node metadata in request info.
-  google::protobuf::Struct metadata;
-  if (!getStructValue({"filter_state", key}, &metadata)) {
-    logWarn(absl::StrCat("cannot get stackdriver metadata for: ", key));
-    return;
-  }
-  auto status = ::Wasm::Common::extractNodeMetadata(metadata, &peer_node_info_);
-  if (status != Status::OK) {
-    logWarn("cannot parse upstream peer node metadata " +
-            metadata.DebugString() + ": " + status.ToString());
-  }
-
   // Record telemetry based on request info.
-  getRootContext()->record(*log_info_, peer_node_info_);
+  root->record(*log_info_);
 }
 
 }  // namespace Stackdriver
