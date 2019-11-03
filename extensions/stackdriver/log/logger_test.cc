@@ -45,7 +45,7 @@ class MockExporter : public Exporter {
 
 class LoggerTest : public ::testing::Test {
  public:
-  void SetUp() { 
+  void SetUp() {
     request_timestamp_ = TimeUtil::SecondsToTimestamp(0);
     request_operation_ = "GET";
     destination_service_host_ = "httpbin.org";
@@ -54,13 +54,20 @@ class LoggerTest : public ::testing::Test {
     destination_principal_ = "destination_principal";
     source_principal_ = "source_principal";
     auth_policy_ = true;
-    EXPECT_CALL(log_info_, requestTimestamp()).WillRepeated(testing::ReturnRef(request_timestamp_));
-    EXPECT_CALL(log_info_, requestOperation()).WillRepeated(testing::ReturnRef(request_timestamp_));
-    EXPECT_CALL(log_info_, requestOperation()).WillRepeated(testing::ReturnRef(request_timestamp_));
-    EXPECT_CALL(log_info_, requestOperation()).WillRepeated(testing::ReturnRef(request_timestamp_));
-    EXPECT_CALL(log_info_, requestOperation()).WillRepeated(testing::ReturnRef(request_timestamp_));
-    EXPECT_CALL(log_info_, requestOperation()).WillRepeated(testing::ReturnRef(request_timestamp_));
-    EXPECT_CALL(log_info_, requestOperation()).WillRepeated(testing::ReturnRef(request_timestamp_));
+    EXPECT_CALL(log_info_, requestTimestamp())
+        .WillRepeated(testing::ReturnRef(request_timestamp_));
+    EXPECT_CALL(log_info_, requestOperation())
+        .WillRepeated(testing::ReturnRef(request_timestamp_));
+    EXPECT_CALL(log_info_, destinationServiceHost())
+        .WillRepeated(testing::ReturnRef(request_timestamp_));
+    EXPECT_CALL(log_info_, requestProtocol())
+        .WillRepeated(testing::ReturnRef(request_timestamp_));
+    EXPECT_CALL(log_info_, requestOperation())
+        .WillRepeated(testing::ReturnRef(request_timestamp_));
+    EXPECT_CALL(log_info_, requestOperation())
+        .WillRepeated(testing::ReturnRef(request_timestamp_));
+    EXPECT_CALL(log_info_, requestOperation())
+        .WillRepeated(testing::ReturnRef(request_timestamp_));
   }
 
   MockLogInfo log_info_;
@@ -164,8 +171,8 @@ TEST_F(LoggerTest, TestWriteLogEntry) {
 // TEST_F(LoggerTest, TestWriteLogEntryRotation) {
 //   auto exporter = std::make_unique<::testing::NiceMock<MockExporter>>();
 //   auto exporter_ptr = exporter.get();
-//   auto logger = std::make_unique<Logger>(nodeInfo(), std::move(exporter), 900);
-//   for (int i = 0; i < 9; i++) {
+//   auto logger = std::make_unique<Logger>(nodeInfo(), std::move(exporter),
+//   900); for (int i = 0; i < 9; i++) {
 //     logger->addLogEntry(logInfo(), peerNodeInfo());
 //   }
 //   EXPECT_CALL(*exporter_ptr, exportLogs(::testing::_))
@@ -176,7 +183,8 @@ TEST_F(LoggerTest, TestWriteLogEntry) {
 //             EXPECT_EQ(requests.size(), 3);
 //             for (const auto& req : requests) {
 //               auto expected_request = expectedRequest(3);
-//               EXPECT_TRUE(MessageDifferencer::Equals(expected_request, *req));
+//               EXPECT_TRUE(MessageDifferencer::Equals(expected_request,
+//               *req));
 //             }
 //           }));
 //   logger->exportLogEntry();

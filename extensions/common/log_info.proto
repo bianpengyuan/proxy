@@ -27,6 +27,8 @@ message LogInfo {
   google.protobuf.Int64Value request_size = 3;
   google.protobuf.Int64Value response_size = 4;
   google.protobuf.Int64Value destination_port = 5;
+  google.protobuf.StringValue source_address = 30;
+  google.protobuf.StringValue destination_address = 31;
 
   google.protobuf.StringValue request_protocol = 6;
   google.protobuf.Int64Value response_code = 7;

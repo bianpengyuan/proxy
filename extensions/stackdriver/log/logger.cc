@@ -44,9 +44,8 @@ Logger::Logger(const ::wasm::common::NodeInfo& local_node_info,
       std::make_unique<google::logging::v2::WriteLogEntriesRequest>();
 
   // Set log names.
-  const auto& project_id =
-      local_node_info.platform_metadata().at(Common::kGCPProjectKey);
-  log_entries_request_->set_log_name("projects/" + project_id + "/logs/" +
+  project_id_ = local_node_info.platform_metadata().at(Common::kGCPProjectKey);
+  log_entries_request_->set_log_name("projects/" + project_id_ + "/logs/" +
                                      kServerAccessLogName);
 
   std::string resource_type = Common::kContainerMonitoredResource;
@@ -69,6 +68,13 @@ Logger::Logger(const ::wasm::common::NodeInfo& local_node_info,
   (*label_map)["destination_workload"] = local_node_info.workload_name();
   (*label_map)["destination_namespace"] = local_node_info.namespace_();
   (*label_map)["mesh_uid"] = local_node_info.mesh_id();
+  // add local version label if there is exist.
+  const auto& labels = local_node_info.labels();
+  auto version_iter = labels.find("version");
+  if (version_iter != labels.end()) {
+    (*label_map)["destination_version"] = version_iter->second;
+  }
+
   log_request_size_limit_ = log_request_size_limit;
   exporter_ = std::move(exporter);
 }
@@ -82,9 +88,16 @@ void Logger::addLogEntry(::Wasm::Common::LogInfo& log_info,
   *new_entry->mutable_timestamp() = log_info.requestTimestamp();
   new_entry->set_severity(::google::logging::type::INFO);
   auto label_map = new_entry->mutable_labels();
+  (*label_map)["request_id"] = log_info.requestID();
   (*label_map)["source_name"] = peer_node_info.name();
   (*label_map)["source_workload"] = peer_node_info.workload_name();
   (*label_map)["source_namespace"] = peer_node_info.namespace_();
+  // Add source version label if exist.
+  const auto& peer_labels = peer_node_info.labels();
+  auto version_iter = peer_labels.find("version");
+  if (version_iter != peer_labels.end()) {
+    (*label_map)["source_version"] = version_iter->second;
+  }
 
   (*label_map)["destination_service_host"] = log_info.destinationServiceHost();
   // (*label_map)["response_flag"] = log_info.ResponseFlag();
@@ -97,11 +110,25 @@ void Logger::addLogEntry(::Wasm::Common::LogInfo& log_info,
   // Insert HTTPRequest
   auto http_request = new_entry->mutable_http_request();
   http_request->set_request_method(log_info.requestOperation());
+  http_request->set_request_url(log_info.requestScheme() + "://" +
+                                log_info.requestHost() + log_info.urlPath());
+  http_request->set_request_size(log_info.requestSize());
+  http_request->set_status(log_info.responseCode());
+  http_request->set_response_size(log_info.responseSize());
+  http_request->set_user_agent(log_info.userAgent());
+  http_request->set_remote_ip(log_info.sourceAddress());
+  http_request->set_server_ip(log_info.destinationAddress());
   http_request->set_protocol(log_info.requestProtocol());
   *http_request->mutable_latency() = log_info.duration();
+  http_request->set_referer(log_info.referer());
 
   // Insert trace headers, if exist.
-
+  const auto& trace_id = log_info.b3TraceID();
+  if (!trace_id.empty()) {
+    new_entry->set_trace("projects/" + project_id_ + "/traces/" + trace_id);
+    new_entry->set_span_id(log_info.b3SpanID());
+    new_entry->set_trace_sampled(log_info.b3TraceSampled());
+  }
   // Accumulate estimated size of the request. If the current request exceeds
   // the size limit, flush the request out.
   size_ += new_entry->ByteSizeLong();

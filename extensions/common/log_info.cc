@@ -136,19 +136,33 @@ int64_t LogInfoImpl::destinationPort() {
   return context_.destination_port().value();
 }
 
-const std::string& LogInfoImpl::requestProtocol() {
-  if (context_.has_request_protocol()) {
-    return context_.request_protocol().value();
+const std::string& LogInfoImpl::sourceAddress() {
+  if (!context_.has_source_address()) {
+    getStringValue({"source", "address"},
+                   context_.mutable_source_address()->mutable_value());
   }
+  return context_.source_address().value();
+}
 
-  // TODO Add http/1.1, http/1.0, http/2 in a separate attribute.
-  // http|grpc classification is compatible with Mixerclient
-  if (kGrpcContentTypes.count(getHeaderMapValue(HeaderMapType::RequestHeaders,
-                                                kContentTypeHeaderKey)
-                                  ->toString()) != 0) {
-    context_.mutable_request_protocol()->set_value(kProtocolGRPC);
-  } else {
-    context_.mutable_request_protocol()->set_value(kProtocolHTTP);
+const std::string& LogInfoImpl::destinationAddress() {
+  if (!context_.has_destination_address()) {
+    getStringValue({"destination", "address"},
+                   context_.mutable_destination_address()->mutable_value());
+  }
+  return context_.destination_address().value();
+}
+
+const std::string& LogInfoImpl::requestProtocol() {
+  if (!context_.has_request_protocol()) {
+    // TODO Add http/1.1, http/1.0, http/2 in a separate attribute.
+    // http|grpc classification is compatible with Mixerclient
+    if (kGrpcContentTypes.count(getHeaderMapValue(HeaderMapType::RequestHeaders,
+                                                  kContentTypeHeaderKey)
+                                    ->toString()) != 0) {
+      context_.mutable_request_protocol()->set_value(kProtocolGRPC);
+    } else {
+      context_.mutable_request_protocol()->set_value(kProtocolHTTP);
+    }
   }
 
   // string_attributes_.emplace(RequestProtocolKey, proto);

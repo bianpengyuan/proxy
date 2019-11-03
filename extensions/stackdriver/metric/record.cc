@@ -65,7 +65,7 @@ void record(bool is_outbound, const ::wasm::common::NodeInfo &local_node_info,
        {requestProtocolKey(), log_info.requestProtocol()},
        {serviceAuthenticationPolicyKey(),
         ::Wasm::Common::AuthenticationPolicyString(
-              log_info.serviceAuthenticationPolicy())},
+            log_info.serviceAuthenticationPolicy())},
        {destinationServiceNameKey(), log_info.destinationServiceName()},
        {destinationServiceNamespaceKey(), local_node_info.namespace_()},
        {destinationPortKey(), std::to_string(log_info.destinationPort())},

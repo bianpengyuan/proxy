@@ -33,6 +33,8 @@ class LogInfo {
   virtual int64_t requestSize() = 0;
   virtual int64_t responseSize() = 0;
   virtual int64_t destinationPort() = 0;
+  virtual const std::string& sourceAddress() = 0;
+  virtual const std::string& destinationAddress() = 0;
   virtual const std::string& requestProtocol() = 0;
   virtual int64_t responseCode() = 0;
   // virtual const std::string& responseFlag() = 0;
@@ -71,6 +73,8 @@ class LogInfoImpl : public LogInfo {
   int64_t requestSize() override;
   int64_t responseSize() override;
   int64_t destinationPort() override;
+  const std::string& sourceAddress() override;
+  const std::string& destinationAddress() override;
   const std::string& requestProtocol() override;
   int64_t responseCode() override;
   // const std::string& responseFlag() override;
