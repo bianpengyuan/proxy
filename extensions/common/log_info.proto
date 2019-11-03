@@ -42,7 +42,7 @@ message LogInfo {
   google.protobuf.Duration duration = 17;
   google.protobuf.Duration response_duration = 18;
   google.protobuf.StringValue requested_server_name = 19;
-  
+
   google.protobuf.Int64Value traffic_direction = 20;
 
   google.protobuf.StringValue referer = 21;

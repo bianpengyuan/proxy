@@ -54,8 +54,8 @@ using ::Wasm::Common::kDownstreamMetadataIdKey;
 using ::Wasm::Common::kDownstreamMetadataKey;
 using ::Wasm::Common::kUpstreamMetadataIdKey;
 using ::Wasm::Common::kUpstreamMetadataKey;
-using ::wasm::common::NodeInfo;
 using ::Wasm::Common::LogInfo;
+using ::wasm::common::NodeInfo;
 
 constexpr char kStackdriverExporter[] = "stackdriver_exporter";
 constexpr char kExporterRegistered[] = "registered";
@@ -187,8 +187,7 @@ void StackdriverRootContext::onTick() {
   }
 }
 
-void StackdriverRootContext::record(LogInfo &log_info,
-                   const RequestInfo& request_info) {
+void StackdriverRootContext::record(LogInfo& log_info) {
   const auto peer_node_info_ptr = getPeerNode();
   const NodeInfo& peer_node_info =
       peer_node_info_ptr ? *peer_node_info_ptr : ::Wasm::Common::EmptyNodeInfo;
@@ -235,14 +234,14 @@ inline bool StackdriverRootContext::enableEdgeReporting() {
 // TODO(bianpengyuan) Add final export once root context supports onDone.
 // https://github.com/envoyproxy/envoy-wasm/issues/240
 
-StackdriverRootContext *StackdriverContext::getRootContext() {
-  RootContext *root = this->root();
-  return dynamic_cast<StackdriverRootContext *>(root);
+StackdriverRootContext* StackdriverContext::getRootContext() {
+  RootContext* root = this->root();
+  return dynamic_cast<StackdriverRootContext*>(root);
 }
 
 void StackdriverContext::onLog() {
   // Record telemetry based on request info.
-  root->record(*log_info_);
+  getRootContext()->record(*log_info_);
 }
 
 }  // namespace Stackdriver

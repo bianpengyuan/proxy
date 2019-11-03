@@ -105,7 +105,8 @@ void EdgeReporter::addEdge(::Wasm::Common::LogInfo& log_info,
 
   // TODO(douglas-reid): use the short name for the destination service when
   // available Right now, this uses destination host instead.
-  edge->set_destination_service_name(log_info.destinationServiceHost());
+  auto destination_service_host = log_info.destinationServiceHost();
+  edge->set_destination_service_name(destination_service_host);
   edge->set_destination_service_namespace(node_instance_.workload_namespace());
   instanceFromMetadata(peer_node_info, edge->mutable_source());
   edge->mutable_destination()->CopyFrom(node_instance_);
@@ -120,7 +121,6 @@ void EdgeReporter::addEdge(::Wasm::Common::LogInfo& log_info,
   } else {
     edge->set_protocol(TrafficAssertion_Protocol_PROTOCOL_TCP);
   }
-
   if (current_request_->traffic_assertions_size() >
       max_assertions_per_request_) {
     reportEdges();

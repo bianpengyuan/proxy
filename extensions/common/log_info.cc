@@ -14,7 +14,6 @@
  */
 
 #include "extensions/common/log_info.h"
-#include "extensions/common/context.h"
 
 // WASM_PROLOG
 #ifndef NULL_PLUGIN
@@ -26,8 +25,8 @@
 
 using Envoy::Extensions::Common::Wasm::HeaderMapType;
 using Envoy::Extensions::Common::Wasm::Null::Plugin::getHeaderMapValue;
-using Envoy::Extensions::Common::Wasm::Null::Plugin::getValue;
 using Envoy::Extensions::Common::Wasm::Null::Plugin::getStringValue;
+using Envoy::Extensions::Common::Wasm::Null::Plugin::getValue;
 
 #endif  // NULL_PLUGIN
 
@@ -116,7 +115,7 @@ int64_t LogInfoImpl::requestSize() {
 }
 
 int64_t LogInfoImpl::responseSize() {
-  if (!context_.has_response_size()) {  
+  if (!context_.has_response_size()) {
     int64_t response_total_size;
     getValue({"response", "total_size"}, &response_total_size);
     context_.mutable_response_size()->set_value(response_total_size);
@@ -167,11 +166,12 @@ int64_t LogInfoImpl::responseCode() {
 
 const std::string& LogInfoImpl::destinationServiceHost() {
   if (!context_.has_destination_service_host()) {
-    // Try to get fqdn of destination service from cluster name. If not found, use
-    // host header instead.
+    // Try to get fqdn of destination service from cluster name. If not found,
+    // use host header instead.
     std::string cluster_name = "";
     getStringValue({"cluster_name"}, &cluster_name);
-    extractFqdn(cluster_name, context_.mutable_destination_service_host()->mutable_value());
+    extractFqdn(cluster_name,
+                context_.mutable_destination_service_host()->mutable_value());
     if (context_.destination_service_host().value().empty()) {
       // fallback to host header.
       context_.mutable_destination_service_host()->set_value(
@@ -180,14 +180,15 @@ const std::string& LogInfoImpl::destinationServiceHost() {
       // TODO: what should be the fallback here?
       context_.mutable_destination_service_name()->set_value(cluster_name);
     } else {
-      extractServiceName(context_.destination_service_host().value(),
-                         context_.mutable_destination_service_name()->mutable_value());
+      extractServiceName(
+          context_.destination_service_host().value(),
+          context_.mutable_destination_service_name()->mutable_value());
     }
   }
   return context_.destination_service_host().value();
 }
 
-const std::string& LogInfoImpl::destiantionServiceName() {
+const std::string& LogInfoImpl::destinationServiceName() {
   if (!context_.has_destination_service_name()) {
     destinationServiceHost();
   }
@@ -196,48 +197,61 @@ const std::string& LogInfoImpl::destiantionServiceName() {
 
 const std::string& LogInfoImpl::requestOperation() {
   if (!context_.has_request_operation()) {
-    getStringValue({"request", "method"}, context_.mutable_request_operation()->mutable_value());
+    getStringValue({"request", "method"},
+                   context_.mutable_request_operation()->mutable_value());
   }
   return context_.request_operation().value();
 }
 
-bool LogInfoImpl::mTLS() {
-  if (!context_.has_mtls()) {
-    bool isMTLS = false;
-    getValue({"connection", "mtls"}, &isMTLS);
-    context_.mutable_mtls()->set_value(isMTLS);
+::Wasm::Common::ServiceAuthenticationPolicy
+LogInfoImpl::serviceAuthenticationPolicy() {
+  if (isOutbound()) {
+    return ::Wasm::Common::ServiceAuthenticationPolicy::Unspecified;
   }
-  return context_.mtls().value();
+  if (!context_.has_mtls()) {
+    bool mtls;
+    getValue({"connection", "mtls"}, &mtls);
+    context_.mutable_mtls()->set_value(mtls);
+  }
+  return context_.mtls().value()
+             ? ::Wasm::Common::ServiceAuthenticationPolicy::MutualTLS
+             : ::Wasm::Common::ServiceAuthenticationPolicy::None;
 }
 
 const std::string& LogInfoImpl::sourcePrincipal() {
   if (!context_.has_source_principal()) {
-    auto key = isOutbound() ? "uri_san_local_certificate" : "uri_san_peer_certificate";
-    getStringValue({"connection", key}, context_.mutable_source_principal()->mutable_value());
+    auto key =
+        isOutbound() ? "uri_san_local_certificate" : "uri_san_peer_certificate";
+    getStringValue({"connection", key},
+                   context_.mutable_source_principal()->mutable_value());
   }
   return context_.source_principal().value();
 }
 
 const std::string& LogInfoImpl::destinationPrincipal() {
   if (!context_.has_destination_principal()) {
-    auto key = isOutbound() ? "uri_san_peer_certificate" : "uri_san_local_certificate";
-    getStringValue({"connection", key}, context_.mutable_destination_principal()->mutable_value());
+    auto key =
+        isOutbound() ? "uri_san_peer_certificate" : "uri_san_local_certificate";
+    getStringValue({"connection", key},
+                   context_.mutable_destination_principal()->mutable_value());
   }
   return context_.destination_principal().value();
 }
 
 const std::string& LogInfoImpl::rbacPermissivePolicyID() {
   if (!context_.has_rbac_permissive_policy_id()) {
-    getStringValue({"metadata", RbacFilterName, RbacPermissivePolicyIDField},
-      context_.mutable_rbac_permissive_policy_id()->mutable_value());
+    getStringValue(
+        {"metadata", RbacFilterName, RbacPermissivePolicyIDField},
+        context_.mutable_rbac_permissive_policy_id()->mutable_value());
   }
   return context_.rbac_permissive_policy_id().value();
 }
 
 const std::string& LogInfoImpl::rbacPermissiveEngineResult() {
   if (!context_.has_rbac_permissive_engine_result()) {
-    getStringValue({"metadata", RbacFilterName, RbacPermissiveEngineResultField},
-                  context_.mutable_rbac_permissive_engine_result()->mutable_value());
+    getStringValue(
+        {"metadata", RbacFilterName, RbacPermissiveEngineResultField},
+        context_.mutable_rbac_permissive_engine_result()->mutable_value());
   }
   return context_.rbac_permissive_engine_result().value();
 }
@@ -245,7 +259,7 @@ const std::string& LogInfoImpl::rbacPermissiveEngineResult() {
 const std::string& LogInfoImpl::requestedServerName() {
   if (!context_.has_requested_server_name()) {
     getStringValue({"connection", "requested_server_name"},
-                  context_.mutable_requested_server_name()->mutable_value());
+                   context_.mutable_requested_server_name()->mutable_value());
   }
   return context_.requested_server_name().value();
 }
@@ -253,7 +267,7 @@ const std::string& LogInfoImpl::requestedServerName() {
 const std::string& LogInfoImpl::referer() {
   if (!context_.has_referer()) {
     getStringValue({"request", "referer"},
-                  context_.mutable_referer()->mutable_value());
+                   context_.mutable_referer()->mutable_value());
   }
   return context_.referer().value();
 }
@@ -261,7 +275,7 @@ const std::string& LogInfoImpl::referer() {
 const std::string& LogInfoImpl::userAgent() {
   if (!context_.has_user_agent()) {
     getStringValue({"request", "user_agent"},
-                  context_.mutable_user_agent()->mutable_value());
+                   context_.mutable_user_agent()->mutable_value());
   }
   return context_.user_agent().value();
 }
@@ -269,7 +283,7 @@ const std::string& LogInfoImpl::userAgent() {
 const std::string& LogInfoImpl::urlPath() {
   if (!context_.has_url_path()) {
     getStringValue({"request", "url_path"},
-                  context_.mutable_url_path()->mutable_value());
+                   context_.mutable_url_path()->mutable_value());
   }
   return context_.url_path().value();
 }
@@ -277,7 +291,7 @@ const std::string& LogInfoImpl::urlPath() {
 const std::string& LogInfoImpl::requestHost() {
   if (!context_.has_url_host()) {
     getStringValue({"request", "host"},
-                  context_.mutable_url_host()->mutable_value());
+                   context_.mutable_url_host()->mutable_value());
   }
   return context_.url_host().value();
 }
@@ -285,7 +299,7 @@ const std::string& LogInfoImpl::requestHost() {
 const std::string& LogInfoImpl::requestScheme() {
   if (!context_.has_url_scheme()) {
     getStringValue({"request", "scheme"},
-                  context_.mutable_url_scheme()->mutable_value());
+                   context_.mutable_url_scheme()->mutable_value());
   }
   return context_.url_scheme().value();
 }
@@ -293,27 +307,26 @@ const std::string& LogInfoImpl::requestScheme() {
 const std::string& LogInfoImpl::requestID() {
   if (!context_.has_request_id()) {
     getStringValue({"request", "id"},
-                  context_.mutable_request_id()->mutable_value());
+                   context_.mutable_request_id()->mutable_value());
   }
   return context_.request_id().value();
 }
 
 const std::string& LogInfoImpl::b3SpanID() {
   if (!context_.has_b3_span_id()) {
-    getStringValue({"request", "headers", B3SpanID}, 
-      context_.mutable_b3_span_id()->mutable_value());
+    getStringValue({"request", "headers", B3SpanID},
+                   context_.mutable_b3_span_id()->mutable_value());
   }
   return context_.b3_span_id().value();
 }
 
 const std::string& LogInfoImpl::b3TraceID() {
   if (!context_.has_b3_span_id()) {
-    getStringValue({"request", "headers", B3TraceID}, 
-      context_.mutable_b3_span_id()->mutable_value());
+    getStringValue({"request", "headers", B3TraceID},
+                   context_.mutable_b3_span_id()->mutable_value());
   }
   return context_.b3_span_id().value();
 }
-
 
 bool LogInfoImpl::b3TraceSampled() {
   if (!context_.has_b3_trace_sampled()) {

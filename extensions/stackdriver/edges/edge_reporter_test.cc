@@ -17,12 +17,12 @@
 
 #include <memory>
 
+#include "extensions/common/mock_log_info.h"
 #include "extensions/stackdriver/common/constants.h"
 #include "google/protobuf/text_format.h"
 #include "google/protobuf/util/message_differencer.h"
 #include "google/protobuf/util/time_util.h"
 #include "gtest/gtest.h"
-#include "extensions/common/mock_log_info.h"
 
 namespace Extensions {
 namespace Stackdriver {
@@ -161,8 +161,12 @@ TEST(EdgesTest, TestAddEdge) {
   auto edges = std::make_unique<EdgeReporter>(
       nodeInfo(), std::move(test_client), TimeUtil::GetCurrentTime);
   Wasm::Common::MockLogInfo log_info;
-  EXPECT_CALL(log_info, destinationServiceHost()).WillRepeatedly(testing::ReturnRef("httpbin.org"));
-  EXPECT_CALL(log_info, requestProtocol()).WillRepeatedly(testing::ReturnRef("HTTP"));
+  std::string destination_service = "httpbin.org";
+  std::string request_protocol = "HTTP";
+  EXPECT_CALL(log_info, destinationServiceHost())
+      .WillRepeatedly(testing::ReturnRef(destination_service));
+  EXPECT_CALL(log_info, requestProtocol())
+      .WillRepeatedly(testing::ReturnRef(request_protocol));
   edges->addEdge(log_info, "test", peerNodeInfo());
   edges->reportEdges();
 
@@ -190,8 +194,12 @@ TEST(EdgeReporterTest, TestRequestEdgeCache) {
       nodeInfo(), std::move(test_client), TimeUtil::GetCurrentTime);
 
   Wasm::Common::MockLogInfo log_info;
-  EXPECT_CALL(log_info, destinationServiceHost()).WillRepeatedly(testing::ReturnRef("httpbin.org"));
-  EXPECT_CALL(log_info, requestProtocol()).WillRepeatedly(testing::ReturnRef("HTTP"));
+  std::string destination_service = "httpbin.org";
+  std::string request_protocol = "HTTP";
+  EXPECT_CALL(log_info, destinationServiceHost())
+      .WillRepeatedly(testing::ReturnRef(destination_service));
+  EXPECT_CALL(log_info, requestProtocol())
+      .WillRepeatedly(testing::ReturnRef(request_protocol));
   // force at least three queued reqs + current (four total)
   for (int i = 0; i < 3500; i++) {
     edges->addEdge(log_info, "test", peerNodeInfo());
@@ -218,8 +226,12 @@ TEST(EdgeReporterTest, TestPeriodicFlushAndCacheReset) {
       nodeInfo(), std::move(test_client), TimeUtil::GetCurrentTime);
 
   Wasm::Common::MockLogInfo log_info;
-  EXPECT_CALL(log_info, destinationServiceHost()).WillRepeatedly(testing::ReturnRef("httpbin.org"));
-  EXPECT_CALL(log_info, requestProtocol()).WillRepeatedly(testing::ReturnRef("HTTP"));
+  std::string destination_service = "httpbin.org";
+  std::string request_protocol = "HTTP";
+  EXPECT_CALL(log_info, destinationServiceHost())
+      .WillRepeatedly(testing::ReturnRef(destination_service));
+  EXPECT_CALL(log_info, requestProtocol())
+      .WillRepeatedly(testing::ReturnRef(request_protocol));
   // force at least three queued reqs + current (four total)
   for (int i = 0; i < 3500; i++) {
     edges->addEdge(log_info, "test", peerNodeInfo());
@@ -250,8 +262,12 @@ TEST(EdgeReporterTest, TestCacheMisses) {
       nodeInfo(), std::move(test_client), TimeUtil::GetCurrentTime);
 
   Wasm::Common::MockLogInfo log_info;
-  EXPECT_CALL(log_info, destinationServiceHost()).WillRepeatedly(testing::ReturnRef("httpbin.org"));
-  EXPECT_CALL(log_info, requestProtocol()).WillRepeatedly(testing::ReturnRef("HTTP"));
+  std::string destination_service = "httpbin.org";
+  std::string request_protocol = "HTTP";
+  EXPECT_CALL(log_info, destinationServiceHost())
+      .WillRepeatedly(testing::ReturnRef(destination_service));
+  EXPECT_CALL(log_info, requestProtocol())
+      .WillRepeatedly(testing::ReturnRef(request_protocol));
 
   // force at least three queued reqs + current (four total)
   for (int i = 0; i < 3500; i++) {

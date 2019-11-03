@@ -86,14 +86,13 @@ void Logger::addLogEntry(::Wasm::Common::LogInfo& log_info,
   (*label_map)["source_workload"] = peer_node_info.workload_name();
   (*label_map)["source_namespace"] = peer_node_info.namespace_();
 
-  (*label_map)["destination_service_host"] =
-      log_info.destinationServiceHost();
+  (*label_map)["destination_service_host"] = log_info.destinationServiceHost();
   // (*label_map)["response_flag"] = log_info.ResponseFlag();
   (*label_map)["destination_principal"] = log_info.destinationPrincipal();
   (*label_map)["source_principal"] = log_info.sourcePrincipal();
   (*label_map)["service_authentication_policy"] =
       std::string(::Wasm::Common::AuthenticationPolicyString(
-          request_info.service_auth_policy));
+          log_info.serviceAuthenticationPolicy()));
 
   // Insert HTTPRequest
   auto http_request = new_entry->mutable_http_request();

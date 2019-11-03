@@ -34,9 +34,9 @@ class MockLogInfo : public LogInfo {
   MOCK_METHOD0(requestProtocol, const std::string&());
   MOCK_METHOD0(responseCode, int64_t());
   MOCK_METHOD0(destinationServiceHost, const std::string&());
-  MOCK_METHOD0(destiantionServiceName, const std::string&());
+  MOCK_METHOD0(destinationServiceName, const std::string&());
   MOCK_METHOD0(requestOperation, const std::string&());
-  MOCK_METHOD0(mTLS, bool());
+  MOCK_METHOD0(serviceAuthenticationPolicy, ServiceAuthenticationPolicy());
   MOCK_METHOD0(sourcePrincipal, const std::string&());
   MOCK_METHOD0(destinationPrincipal, const std::string&());
   MOCK_METHOD0(rbacPermissivePolicyID, const std::string&());

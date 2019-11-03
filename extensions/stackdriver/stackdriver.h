@@ -108,8 +108,8 @@ class StackdriverRootContext : public RootContext {
 // the request stream itself.
 class StackdriverContext : public Context {
  public:
-  StackdriverContext(uint32_t id, RootContext* root) :
-    Context(id, root), log_info_(new ::Wasm::Common::LogInfoImpl) {}
+  StackdriverContext(uint32_t id, RootContext* root)
+      : Context(id, root), log_info_(new ::Wasm::Common::LogInfoImpl) {}
   void onLog() override;
 
  private:

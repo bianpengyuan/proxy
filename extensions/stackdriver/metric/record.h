@@ -15,8 +15,8 @@
 
 #pragma once
 
-#include "extensions/common/log_info.h"
 #include "extensions/common/context.h"
+#include "extensions/common/log_info.h"
 #include "extensions/stackdriver/config/v1alpha1/stackdriver_plugin_config.pb.h"
 
 namespace Extensions {

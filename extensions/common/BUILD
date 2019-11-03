@@ -1,3 +1,4 @@
+
 # Copyright 2019 Istio Authors. All Rights Reserved.
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
@@ -55,10 +56,24 @@ envoy_cc_library(
     hdrs = [
         "node_info_cache.h",
     ],
+    repository = "@envoy",
+    visibility = ["//visibility:public"],
     deps = [
+        ":context",
         ":node_info_cc_proto",
         "@envoy//source/extensions/common/wasm/null:null_plugin_lib",
     ],
+)
+
+cc_proto_library(
+    name = "node_info_cc_proto",
+    visibility = ["//visibility:public"],
+    deps = ["node_info_proto"],
+)
+
+proto_library(
+    name = "node_info_proto",
+    srcs = ["node_info.proto"],
 )
 
 envoy_cc_library(
@@ -87,17 +102,6 @@ proto_library(
         "@com_google_protobuf//:timestamp_proto",
         "@com_google_protobuf//:wrappers_proto",
     ],
-)
-
-cc_proto_library(
-    name = "node_info_cc_proto",
-    visibility = ["//visibility:public"],
-    deps = ["node_info_proto"],
-)
-
-proto_library(
-    name = "node_info_proto",
-    srcs = ["node_info.proto"],
 )
 
 envoy_cc_test(

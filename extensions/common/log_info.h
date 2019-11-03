@@ -18,6 +18,7 @@
 #include <string>
 #include <unordered_map>
 
+#include "extensions/common/context.h"
 #include "extensions/common/log_info.pb.h"
 
 namespace Wasm {
@@ -36,9 +37,10 @@ class LogInfo {
   virtual int64_t responseCode() = 0;
   // virtual const std::string& responseFlag() = 0;
   virtual const std::string& destinationServiceHost() = 0;
-  virtual const std::string& destiantionServiceName() = 0;
+  virtual const std::string& destinationServiceName() = 0;
   virtual const std::string& requestOperation() = 0;
-  virtual bool mTLS() = 0;
+  virtual ::Wasm::Common::ServiceAuthenticationPolicy
+  serviceAuthenticationPolicy() = 0;
   virtual const std::string& sourcePrincipal() = 0;
   virtual const std::string& destinationPrincipal() = 0;
   virtual const std::string& rbacPermissivePolicyID() = 0;
@@ -73,9 +75,10 @@ class LogInfoImpl : public LogInfo {
   int64_t responseCode() override;
   // const std::string& responseFlag() override;
   const std::string& destinationServiceHost() override;
-  const std::string& destiantionServiceName() override;
+  const std::string& destinationServiceName() override;
   const std::string& requestOperation() override;
-  bool mTLS() override;
+  ::Wasm::Common::ServiceAuthenticationPolicy serviceAuthenticationPolicy()
+      override;
   const std::string& sourcePrincipal() override;
   const std::string& destinationPrincipal() override;
   const std::string& rbacPermissivePolicyID() override;

@@ -19,10 +19,10 @@
 #include <vector>
 
 #include "extensions/common/context.h"
+#include "extensions/common/log_info.h"
 #include "extensions/stackdriver/edges/edges.pb.h"
 #include "extensions/stackdriver/edges/mesh_edges_service_client.h"
 #include "google/protobuf/util/time_util.h"
-#include "extensions/common/log_info.h"
 
 namespace Extensions {
 namespace Stackdriver {
