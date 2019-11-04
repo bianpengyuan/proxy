@@ -56,18 +56,20 @@ class LoggerTest : public ::testing::Test {
     auth_policy_ = true;
     EXPECT_CALL(log_info_, requestTimestamp())
         .WillRepeated(testing::ReturnRef(request_timestamp_));
-    EXPECT_CALL(log_info_, requestOperation())
-        .WillRepeated(testing::ReturnRef(request_timestamp_));
     EXPECT_CALL(log_info_, destinationServiceHost())
-        .WillRepeated(testing::ReturnRef(request_timestamp_));
-    EXPECT_CALL(log_info_, requestProtocol())
-        .WillRepeated(testing::ReturnRef(request_timestamp_));
+        .WillRepeated(testing::ReturnRef(destination_service_host_));
+    EXPECT_CALL(log_info_, destinationPrincipal())
+        .WillRepeated(testing::ReturnRef(destination_principal_));
+    EXPECT_CALL(log_info_, sourcePrincipal())
+        .WillRepeated(testing::ReturnRef(source_principal_));
     EXPECT_CALL(log_info_, requestOperation())
-        .WillRepeated(testing::ReturnRef(request_timestamp_));
-    EXPECT_CALL(log_info_, requestOperation())
-        .WillRepeated(testing::ReturnRef(request_timestamp_));
-    EXPECT_CALL(log_info_, requestOperation())
-        .WillRepeated(testing::ReturnRef(request_timestamp_));
+        .WillRepeated(testing::ReturnRef(request_operation_));
+    EXPECT_CALL(log_info_, requestScheme())
+        .WillRepeated(testing::ReturnRef(request_scheme_));
+    EXPECT_CALL(log_info_, requestHost())
+        .WillRepeated(testing::ReturnRef(request_host_));
+    EXPECT_CALL(log_info_, urlPath())
+        .WillRepeated(testing::ReturnRef(request_url_path_));
   }
 
   MockLogInfo log_info_;
@@ -154,7 +156,7 @@ TEST_F(LoggerTest, TestWriteLogEntry) {
   auto exporter = std::make_unique<::testing::NiceMock<MockExporter>>();
   auto exporter_ptr = exporter.get();
   auto logger = std::make_unique<Logger>(nodeInfo(), std::move(exporter));
-  logger->addLogEntry(logInfo(), peerNodeInfo());
+  logger->addLogEntry(log_info_, peerNodeInfo());
   EXPECT_CALL(*exporter_ptr, exportLogs(::testing::_))
       .WillOnce(::testing::Invoke(
           [](const std::vector<std::unique_ptr<
