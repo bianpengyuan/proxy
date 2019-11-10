@@ -128,7 +128,6 @@ void EdgeReporter::addEdge(const ::Wasm::Common::RequestInfo& request_info,
   edge->set_destination_service_namespace(node_instance_.workload_namespace());
   instanceFromMetadata(peer_node_info, edge->mutable_source());
   edge->mutable_destination()->CopyFrom(node_instance_);
-
   auto protocol = request_info.request_protocol;
   if (protocol == "http" || protocol == "HTTP") {
     edge->set_protocol(TrafficAssertion_Protocol_PROTOCOL_HTTP);
@@ -139,7 +138,6 @@ void EdgeReporter::addEdge(const ::Wasm::Common::RequestInfo& request_info,
   } else {
     edge->set_protocol(TrafficAssertion_Protocol_PROTOCOL_TCP);
   }
-
   if (current_request_->traffic_assertions_size() >
       max_assertions_per_request_) {
     reportEdges();
