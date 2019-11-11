@@ -49,8 +49,6 @@ namespace Common {
 const char kRbacFilterName[] = "envoy.filters.http.rbac";
 const char kRbacPermissivePolicyIDField[] = "shadow_effective_policy_id";
 const char kRbacPermissiveEngineResultField[] = "shadow_engine_result";
-const char kPassThroughClusterName[] = "PassthroughCluster";
-const char kBlackHoleClusterName[] = "BlackHoleCluster";
 
 namespace {
 
@@ -64,22 +62,21 @@ void extractFqdn(const std::string& cluster_name, std::string* fqdn) {
   }
 }
 
-// Extract service name from service fqdn.
-void extractServiceName(const std::string& host,
-                        const std::string& cluster_name,
-                        std::string* service_name,
+// Extract service name from service host.
+void extractServiceName(const std::string& host, std::string* service_name,
                         const std::string& destination_namespace) {
-  if (!cluster_name.compare(kBlackHoleClusterName) ||
-      !cluster_name.compare(kPassThroughClusterName)) {
-    // If the destination is a blackhole or passthrough cluster, set service
-    // name directly as the cluster name.
-    *service_name = cluster_name;
-    return;
-  }
+  // TODO: right now property API only returns cluster with a upstream host, but
+  // not for passthrough or blackhole cluster. Add metrics for these two types
+  // of clusters when property api supports this. if
+  // (!cluster_name.compare(kBlackHoleClusterName) ||
+  //     !cluster_name.compare(kPassThroughClusterName)) {
+  //   *service_name = cluster_name;
+  //   return;
+  // }
 
   auto name_pos = host.find_first_of(".:");
   if (name_pos == std::string::npos) {
-    // host name is already a short service name. return it directly.
+    // host is already a short service name. return it directly.
     *service_name = host;
     return;
   }
@@ -221,7 +218,7 @@ void populateHTTPRequestInfo(bool outbound, bool use_host_header_fallback,
         getHeaderMapValue(HeaderMapType::RequestHeaders, kAuthorityHeaderKey)
             ->toString();
   }
-  extractServiceName(request_info->destination_service_host, cluster_name,
+  extractServiceName(request_info->destination_service_host,
                      &request_info->destination_service_name,
                      destination_namespace);
   // Get rbac labels from dynamic metadata.
