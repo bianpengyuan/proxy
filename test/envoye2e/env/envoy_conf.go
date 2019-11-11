@@ -163,6 +163,9 @@ static_resources:
               socket_address:
                 address: 127.0.0.1
                 port_value: {{.Ports.ClientToAppProxyPort}}
+  - name: BlackHoleCluster
+    connect_timeout: 5s
+    type: STATIC
   listeners:
   - name: proxy-to-server
     traffic_direction: INBOUND
@@ -193,6 +196,32 @@ static_resources:
                   prefix: /
                 route:
                   cluster: inbound|9080|http|server.default.svc.cluster.local
+                  timeout: 0s
+  - name: proxy-to-blackhole
+    traffic_direction: INBOUND
+    address:
+      socket_address:
+        address: 127.0.0.1
+        port_value: {{.Ports.ProxyToBlackHoleProxyPort}}
+    filter_chains:
+    - filters:
+      - name: envoy.http_connection_manager
+        config:
+          codec_type: AUTO
+          stat_prefix: inbound_http
+          http_filters:
+{{.FiltersBeforeEnvoyRouterInProxyToServer | indent 10 }}
+          - name: envoy.router
+          route_config:
+            name: proxy-to-blackhole-route
+            virtual_hosts:
+            - name: proxy-to-blackhole-route
+              domains: ["*"]
+              routes:
+              - match:
+                  prefix: /
+                route:
+                  cluster: BlackHoleCluster
                   timeout: 0s
   - name: client-to-app
     address:

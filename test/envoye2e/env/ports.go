@@ -58,17 +58,18 @@ const (
 
 // Ports stores all used ports
 type Ports struct {
-	BackendPort             uint16
-	ClientAdminPort         uint16
-	AppToClientProxyPort    uint16
-	ClientToServerProxyPort uint16
-	ServerAdminPort         uint16
-	ProxyToServerProxyPort  uint16
-	ClientToAppProxyPort    uint16
-	ClientTCPProxyPort      uint16
-	ServerTCPProxyPort      uint16
-	XDSPort                 uint16
-	SDPort                  uint16
+	BackendPort               uint16
+	ClientAdminPort           uint16
+	AppToClientProxyPort      uint16
+	ClientToServerProxyPort   uint16
+	ServerAdminPort           uint16
+	ProxyToServerProxyPort    uint16
+	ProxyToBlackHoleProxyPort uint16
+	ClientToAppProxyPort      uint16
+	ClientTCPProxyPort        uint16
+	ServerTCPProxyPort        uint16
+	XDSPort                   uint16
+	SDPort                    uint16
 }
 
 func allocPortBase(name uint16) uint16 {
@@ -97,16 +98,17 @@ func allPortFree(base uint16, ports uint16) bool {
 func NewPorts(name uint16) *Ports {
 	base := allocPortBase(name)
 	return &Ports{
-		BackendPort:             base,
-		ClientAdminPort:         base + 1,
-		AppToClientProxyPort:    base + 2,
-		ClientToServerProxyPort: base + 3,
-		ServerAdminPort:         base + 4,
-		ProxyToServerProxyPort:  base + 5,
-		ClientToAppProxyPort:    base + 6,
-		ClientTCPProxyPort:      base + 7,
-		ServerTCPProxyPort:      base + 8,
-		XDSPort:                 base + 9,
-		SDPort:                  base + 10,
+		BackendPort:               base,
+		ClientAdminPort:           base + 1,
+		AppToClientProxyPort:      base + 2,
+		ClientToServerProxyPort:   base + 3,
+		ServerAdminPort:           base + 4,
+		ProxyToServerProxyPort:    base + 5,
+		ProxyToBlackHoleProxyPort: base + 6,
+		ClientToAppProxyPort:      base + 7,
+		ClientTCPProxyPort:        base + 8,
+		ServerTCPProxyPort:        base + 9,
+		XDSPort:                   base + 10,
+		SDPort:                    base + 11,
 	}
 }
