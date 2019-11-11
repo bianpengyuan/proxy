@@ -236,6 +236,7 @@ void populateHTTPRequestInfo(bool outbound, bool use_host_header_fallback,
           ->toString();
 
   int64_t destination_port = 0;
+
   if (outbound) {
     getValue({"upstream", "port"}, &destination_port);
     getStringValue({"upstream", "uri_san_peer_certificate"},

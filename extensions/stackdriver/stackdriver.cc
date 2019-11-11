@@ -224,8 +224,6 @@ inline bool StackdriverRootContext::isOutbound() {
       isOutbound ? kUpstreamMetadataIdKey : kDownstreamMetadataIdKey;
   const auto& metadata_key =
       isOutbound ? kUpstreamMetadataKey : kDownstreamMetadataKey;
-  auto peer_node_info_ptr = node_info_cache_.getPeerById(id_key, metadata_key);
-
   return node_info_cache_.getPeerById(id_key, metadata_key);
 }
 
