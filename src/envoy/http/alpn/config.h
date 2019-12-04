@@ -35,6 +35,12 @@ class AlpnConfigFactory
   ProtobufTypes::MessagePtr createEmptyConfigProto() override;
   std::string name() override;
 
+  Http::FilterFactoryCb createFilterFactory(const Json::Object&,
+                              const std::string&,
+                              Server::Configuration::FactoryContext&) override {
+    throw EnvoyException("v1 API is unsupported");
+  }
+
  private:
   Http::FilterFactoryCb createFilterFactory(
       const istio::envoy::config::filter::http::alpn::v2alpha1::FilterConfig

@@ -36,6 +36,12 @@ class JwtVerificationFilterConfig : public NamedHttpFilterConfigFactory {
                         context);
   }
 
+  Http::FilterFactoryCb createFilterFactory(const Json::Object&,
+                              const std::string&,
+                              FactoryContext&) override {
+    throw EnvoyException("v1 API is unsupported");
+  }
+
   ProtobufTypes::MessagePtr createEmptyConfigProto() override {
     return ProtobufTypes::MessagePtr{new JwtAuthentication};
   }

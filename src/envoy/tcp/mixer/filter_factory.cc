@@ -31,6 +31,10 @@ class FilterFactory : public NamedNetworkFilterConfigFactory {
     return createFilterFactory(dynamic_cast<const TcpClientConfig&>(config),
                                context);
   }
+  Network::FilterFactoryCb createFilterFactory(const Json::Object&,
+                                               FactoryContext&) override {
+    throw EnvoyException("v1 API is unsupported");
+  }
 
   ProtobufTypes::MessagePtr createEmptyConfigProto() override {
     return ProtobufTypes::MessagePtr{new TcpClientConfig};

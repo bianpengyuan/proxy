@@ -37,6 +37,11 @@ class TcpClusterRewriteFilterConfigFactory
   Network::FilterFactoryCb createFilterFactoryFromProto(
       const Protobuf::Message&,
       Server::Configuration::FactoryContext&) override;
+  Network::FilterFactoryCb createFilterFactory(
+      const Json::Object&,
+    Server::Configuration::FactoryContext&) override {
+    throw EnvoyException("v1 API is unsupported");
+  }
 
   ProtobufTypes::MessagePtr createEmptyConfigProto() override;
 

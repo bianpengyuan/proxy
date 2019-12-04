@@ -48,6 +48,12 @@ class AuthnFilterConfig : public NamedHttpFilterConfigFactory,
     return Utils::IstioFilterName::kAuthentication;
   }
 
+  Http::FilterFactoryCb createFilterFactory(const Json::Object&,
+                              const std::string&,
+                              FactoryContext&) override {
+    throw EnvoyException("v1 API is unsupported");
+  }
+
  private:
   Http::FilterFactoryCb createFilterFactory(const FilterConfig& config_pb) {
     ENVOY_LOG(debug, "Called AuthnFilterConfig : {}", __func__);
@@ -67,6 +73,7 @@ class AuthnFilterConfig : public NamedHttpFilterConfigFactory,
         };
   }
 
+ private:
   void warnPermissiveMode(const FilterConfig& filter_config) {
     for (const auto& method : filter_config.policy().peers()) {
       switch (method.params_case()) {
