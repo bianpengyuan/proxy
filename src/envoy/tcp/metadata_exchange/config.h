@@ -38,8 +38,8 @@ class MetadataExchangeConfigFactory
   std::string name() override {
     return "envoy.filters.network.metadata_exchange";
   }
-  Network::FilterFactoryCb createFilterFactory(const Json::Object&,
-                                               Server::Configuration::FactoryContext&) override {
+  Network::FilterFactoryCb createFilterFactory(
+      const Json::Object&, Server::Configuration::FactoryContext&) override {
     throw EnvoyException("v1 API is unsupported");
   }
 

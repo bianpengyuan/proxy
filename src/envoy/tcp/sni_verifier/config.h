@@ -31,8 +31,7 @@ class SniVerifierConfigFactory
       const Protobuf::Message&,
       Server::Configuration::FactoryContext& context) override;
   Network::FilterFactoryCb createFilterFactory(
-      const Json::Object&,
-    Server::Configuration::FactoryContext&) override {
+      const Json::Object&, Server::Configuration::FactoryContext&) override {
     throw EnvoyException("v1 API is unsupported");
   }
 

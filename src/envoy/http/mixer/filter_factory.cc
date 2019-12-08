@@ -36,9 +36,9 @@ class MixerConfigFactory : public NamedHttpFilterConfigFactory {
     return createFilterFactory(
         dynamic_cast<const HttpClientConfig&>(proto_config), prefix, context);
   }
-  Http::FilterFactoryCb createFilterFactory(const Json::Object&,
-                              const std::string&,
-                              Server::Configuration::FactoryContext&) override {
+  Http::FilterFactoryCb createFilterFactory(
+      const Json::Object&, const std::string&,
+      Server::Configuration::FactoryContext&) override {
     throw EnvoyException("v1 API is unsupported");
   }
 

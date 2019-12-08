@@ -49,8 +49,8 @@ class AuthnFilterConfig : public NamedHttpFilterConfigFactory,
   }
 
   Http::FilterFactoryCb createFilterFactory(const Json::Object&,
-                              const std::string&,
-                              FactoryContext&) override {
+                                            const std::string&,
+                                            FactoryContext&) override {
     throw EnvoyException("v1 API is unsupported");
   }
 
