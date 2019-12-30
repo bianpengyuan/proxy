@@ -37,7 +37,7 @@ envoy_cc_library(
     ],
     deps = [
         ":exporter",
-        "//extensions/common:context",
+        "//extensions/common:request_info",
         "//extensions/stackdriver/common:constants",
         "//extensions/stackdriver/common:utils",
     ],
@@ -68,6 +68,7 @@ envoy_cc_test(
     repository = "@envoy",
     deps = [
         ":logger",
+        "//extensions/test:mock_request_info",
         "@envoy//source/extensions/common/wasm:wasm_lib",
     ],
 )

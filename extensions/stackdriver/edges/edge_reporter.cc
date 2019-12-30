@@ -102,7 +102,7 @@ EdgeReporter::~EdgeReporter() {
 }
 
 // ONLY inbound
-void EdgeReporter::addEdge(const ::Wasm::Common::RequestInfo& request_info,
+void EdgeReporter::addEdge(::Wasm::Common::Context::RequestInfo& request_info,
                            const std::string& peer_metadata_id_key,
                            const ::wasm::common::NodeInfo& peer_node_info) {
   const auto& peer = current_peers_.emplace(peer_metadata_id_key);
@@ -114,12 +114,12 @@ void EdgeReporter::addEdge(const ::Wasm::Common::RequestInfo& request_info,
   auto* traffic_assertions = current_request_->mutable_traffic_assertions();
   auto* edge = traffic_assertions->Add();
 
-  edge->set_destination_service_name(request_info.destination_service_name);
+  edge->set_destination_service_name(request_info.destinationServiceName());
   edge->set_destination_service_namespace(node_instance_.workload_namespace());
   instanceFromMetadata(peer_node_info, edge->mutable_source());
   edge->mutable_destination()->CopyFrom(node_instance_);
 
-  auto protocol = request_info.request_protocol;
+  auto protocol = request_info.requestProtocol();
   if (protocol == "http" || protocol == "HTTP") {
     edge->set_protocol(TrafficAssertion_Protocol_PROTOCOL_HTTP);
   } else if (protocol == "https" || protocol == "HTTPS") {

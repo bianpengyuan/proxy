@@ -15,34 +15,24 @@
 ################################################################################
 #
 
-package(default_visibility = ["//visibility:public"])
+licenses(["notice"])
 
 load(
     "@envoy//bazel:envoy_build_system.bzl",
     "envoy_cc_library",
+    "envoy_package",
 )
 
+envoy_package()
+
 envoy_cc_library(
-    name = "stackdriver_plugin",
-    srcs = [
-        "stackdriver.cc",
-        "stackdriver_plugin_factory.cc",
-    ],
+    name = "mock_request_info",
     hdrs = [
-        "stackdriver.h",
+        "mock_request_info.h",
     ],
     repository = "@envoy",
+    visibility = ["//visibility:public"],
     deps = [
-        "//extensions/common:node_info_cache",
         "//extensions/common:request_info",
-        "//extensions/stackdriver/common:constants",
-        "//extensions/stackdriver/config/v1alpha1:stackdriver_plugin_config_cc_proto",
-        "//extensions/stackdriver/edges:edge_reporter",
-        "//extensions/stackdriver/edges:mesh_edges_service_client",
-        "//extensions/stackdriver/log:exporter",
-        "//extensions/stackdriver/log:logger",
-        "//extensions/stackdriver/metric",
-        "@envoy//source/extensions/common/wasm/null:null_plugin_lib",
-        "@io_opencensus_cpp//opencensus/exporters/stats/stackdriver:stackdriver_exporter",
     ],
 )

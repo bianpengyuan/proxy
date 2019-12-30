@@ -62,7 +62,7 @@ envoy_cc_library(
     visibility = ["//visibility:public"],
     deps = [
         ":edges_cc_proto",
-        "//extensions/common:context",
+        "//extensions/common:request_info",
         "@envoy//source/extensions/common/wasm/null:null_plugin_lib",
     ],
 )
@@ -93,6 +93,7 @@ envoy_cc_test(
     repository = "@envoy",
     deps = [
         ":edge_reporter",
+        "//extensions/test:mock_request_info",
         "@envoy//source/extensions/common/wasm:wasm_lib",
     ],
 )

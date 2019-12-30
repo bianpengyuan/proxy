@@ -205,14 +205,13 @@ void StackdriverRootContext::record() {
   const auto& destination_node_info =
       isOutbound() ? peer_node_info : local_node_info_;
 
-  ::Wasm::Common::RequestInfo request_info;
-  ::Wasm::Common::populateHTTPRequestInfo(isOutbound(), useHostHeaderFallback(),
-                                          &request_info,
-                                          destination_node_info.namespace_());
+  std::unique_ptr<::Wasm::Common::Context::RequestInfo> request_info =
+      std::make_unique<::Wasm::Common::Context::RequestInfoImpl>(
+          destination_node_info, use_host_header_fallback_);
   ::Extensions::Stackdriver::Metric::record(isOutbound(), local_node_info_,
-                                            peer_node_info, request_info);
+                                            peer_node_info, *request_info);
   if (enableServerAccessLog()) {
-    logger_->addLogEntry(request_info, peer_node_info);
+    logger_->addLogEntry(*request_info, peer_node_info);
   }
   if (enableEdgeReporting()) {
     std::string peer_id;
@@ -224,7 +223,7 @@ void StackdriverRootContext::record() {
           "; skipping edge."));
       return;
     }
-    edge_reporter_->addEdge(request_info, peer_id, peer_node_info);
+    edge_reporter_->addEdge(*request_info, peer_id, peer_node_info);
   }
 }
 

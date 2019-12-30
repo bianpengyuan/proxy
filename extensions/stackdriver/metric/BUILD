@@ -36,7 +36,7 @@ cc_library(
         "//extensions/stackdriver:__pkg__",
     ],
     deps = [
-        "//extensions/common:context",
+        "//extensions/common:request_info",
         "//extensions/stackdriver/common:constants",
         "//extensions/stackdriver/common:utils",
         "//extensions/stackdriver/config/v1alpha1:stackdriver_plugin_config_cc_proto",

@@ -17,6 +17,7 @@
 
 #include "extensions/common/context.h"
 #include "extensions/common/node_info_cache.h"
+#include "extensions/common/request_info.h"
 #include "extensions/stackdriver/common/constants.h"
 #include "extensions/stackdriver/config/v1alpha1/stackdriver_plugin_config.pb.h"
 #include "extensions/stackdriver/edges/edge_reporter.h"

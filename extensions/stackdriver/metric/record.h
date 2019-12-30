@@ -15,7 +15,7 @@
 
 #pragma once
 
-#include "extensions/common/context.h"
+#include "extensions/common/request_info.h"
 #include "extensions/stackdriver/config/v1alpha1/stackdriver_plugin_config.pb.h"
 
 namespace Extensions {
@@ -26,7 +26,7 @@ namespace Metric {
 // Reporter kind deceides the type of metrics to record.
 void record(bool is_outbound, const ::wasm::common::NodeInfo &local_node_info,
             const ::wasm::common::NodeInfo &peer_node_info,
-            const ::Wasm::Common::RequestInfo &request_info);
+            ::Wasm::Common::Context::RequestInfo &request_info);
 
 }  // namespace Metric
 }  // namespace Stackdriver

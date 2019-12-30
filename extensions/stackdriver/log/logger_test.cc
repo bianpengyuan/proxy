@@ -19,8 +19,11 @@
 
 #include "extensions/stackdriver/common/constants.h"
 #include "extensions/stackdriver/common/utils.h"
+#include "extensions/test/mock_request_info.h"
+#include "gmock/gmock-actions.h"
 #include "gmock/gmock.h"
 #include "google/logging/v2/log_entry.pb.h"
+#include "google/protobuf/util/json_util.h"
 #include "google/protobuf/util/message_differencer.h"
 #include "gtest/gtest.h"
 
@@ -31,9 +34,6 @@ namespace Log {
 using google::protobuf::util::MessageDifferencer;
 using google::protobuf::util::TimeUtil;
 
-constexpr char kServerAccessLogName[] =
-    "projects/test_project/logs/server-accesslog-stackdriver";
-
 namespace {
 
 class MockExporter : public Exporter {
@@ -43,6 +43,94 @@ class MockExporter : public Exporter {
       void(const std::vector<std::unique_ptr<
                const google::logging::v2::WriteLogEntriesRequest>>&));
 };
+
+class LoggerTest : public ::testing::Test {
+ public:
+  void SetUp() {
+    ::testing::DefaultValue<const std::string&>::Set(default_label_value_);
+    default_duration_value_.set_seconds(10);
+    ::testing::DefaultValue<const google::protobuf::Duration&>::Set(
+        default_duration_value_);
+    default_timestamp_value_ = TimeUtil::SecondsToTimestamp(0);
+    ::testing::DefaultValue<const google::protobuf::Timestamp&>::Set(
+        default_timestamp_value_);
+
+    ON_CALL(request_info_, requestScheme())
+        .WillByDefault(testing::ReturnRef(request_scheme_));
+    ON_CALL(request_info_, requestHost())
+        .WillByDefault(testing::ReturnRef(request_host_));
+    ON_CALL(request_info_, urlPath())
+        .WillByDefault(testing::ReturnRef(url_path_));
+    ON_CALL(request_info_, b3TraceID())
+        .WillByDefault(testing::ReturnRef(trace_id_));
+    ON_CALL(request_info_, b3SpanID())
+        .WillByDefault(testing::ReturnRef(span_id_));
+    ON_CALL(request_info_, b3TraceSampled())
+        .WillByDefault(testing::Return(true));
+  }
+
+  ::testing::NiceMock<Wasm::Common::Context::MockRequestInfo> request_info_;
+
+  std::string default_label_value_ = "default_attr_value";
+  google::protobuf::Duration default_duration_value_;
+  google::protobuf::Timestamp default_timestamp_value_;
+  std::string request_scheme_ = "http";
+  std::string request_host_ = "httpbin.org";
+  std::string url_path_ = "/headers";
+  std::string trace_id_ = "123abc";
+  std::string span_id_ = "abc123";
+};
+
+std::string write_log_request_json = R"({ 
+  "logName":"projects/test_project/logs/server-accesslog-stackdriver",
+  "resource":{ 
+     "type":"k8s_container",
+     "labels":{ 
+        "cluster_name":"test_cluster",
+        "pod_name":"test_pod",
+        "location":"test_location",
+        "namespace_name":"test_namespace",
+        "project_id":"test_project",
+        "container_name":"istio-proxy"
+     }
+  },
+  "labels":{ 
+     "destination_workload":"test_workload",
+     "mesh_uid":"mesh",
+     "destination_namespace":"test_namespace",
+     "destination_name":"test_pod"
+  },
+  "entries":[ 
+     {
+        "httpRequest":{ 
+           "requestMethod":"default_attr_value",
+           "requestUrl":"http://httpbin.org/headers",
+           "userAgent":"default_attr_value",
+           "remoteIp":"default_attr_value",
+           "referer":"default_attr_value",
+           "serverIp":"default_attr_value",
+           "latency":"10s",
+           "protocol":"default_attr_value"
+        },
+        "timestamp":"1970-01-01T00:00:00Z",
+        "severity":"INFO",
+        "labels":{ 
+           "source_name":"test_peer_pod",
+           "destination_principal":"default_attr_value",
+           "destination_service_host":"default_attr_value",
+           "request_id":"default_attr_value",
+           "source_namespace":"test_peer_namespace",
+           "source_principal":"default_attr_value",
+           "service_authentication_policy":"",
+           "source_workload":"",
+           "response_flag":"default_attr_value"
+        },
+        "trace":"projects/test_project/traces/123abc",
+        "spanId":"abc123",
+        "traceSampled":true
+     }
+  ]
+})";
 
 wasm::common::NodeInfo nodeInfo() {
   wasm::common::NodeInfo node_info;
@@ -72,85 +160,48 @@ wasm::common::NodeInfo peerNodeInfo() {
   return node_info;
 }
 
-::Wasm::Common::RequestInfo requestInfo() {
-  ::Wasm::Common::RequestInfo request_info;
-  request_info.start_time = absl::UnixEpoch();
-  request_info.request_operation = "GET";
-  request_info.destination_service_host = "httpbin.org";
-  request_info.response_flag = "-";
-  request_info.request_protocol = "HTTP";
-  request_info.destination_principal = "destination_principal";
-  request_info.source_principal = "source_principal";
-  request_info.service_auth_policy =
-      ::Wasm::Common::ServiceAuthenticationPolicy::MutualTLS;
-  return request_info;
-}
-
 google::logging::v2::WriteLogEntriesRequest expectedRequest(
     int log_entry_count) {
-  auto request_info = requestInfo();
-  auto peer_node_info = peerNodeInfo();
-  auto node_info = nodeInfo();
   google::logging::v2::WriteLogEntriesRequest req;
-  req.set_log_name(kServerAccessLogName);
-  google::api::MonitoredResource monitored_resource;
-  Common::getMonitoredResource(Common::kContainerMonitoredResource, node_info,
-                               &monitored_resource);
-  req.mutable_resource()->CopyFrom(monitored_resource);
-  auto top_label_map = req.mutable_labels();
-  (*top_label_map)["destination_name"] = node_info.name();
-  (*top_label_map)["destination_workload"] = node_info.workload_name();
-  (*top_label_map)["destination_namespace"] = node_info.namespace_();
-  (*top_label_map)["mesh_uid"] = node_info.mesh_id();
-  for (int i = 0; i < log_entry_count; i++) {
+  google::protobuf::util::JsonParseOptions options;
+  JsonStringToMessage(write_log_request_json, &req, options);
+  for (int i = 1; i < log_entry_count; i++) {
     auto* new_entry = req.mutable_entries()->Add();
-    *new_entry->mutable_timestamp() = TimeUtil::SecondsToTimestamp(0);
-    new_entry->set_severity(::google::logging::type::INFO);
-    auto label_map = new_entry->mutable_labels();
-    (*label_map)["source_name"] = peer_node_info.name();
-    (*label_map)["source_workload"] = peer_node_info.workload_name();
-    (*label_map)["source_namespace"] = peer_node_info.namespace_();
-
-    (*label_map)["request_operation"] = request_info.request_operation;
-    (*label_map)["destination_service_host"] =
-        request_info.destination_service_host;
-    (*label_map)["response_flag"] = request_info.response_flag;
-    (*label_map)["protocol"] = request_info.request_protocol;
-    (*label_map)["destination_principal"] = request_info.destination_principal;
-    (*label_map)["source_principal"] = request_info.source_principal;
-    (*label_map)["service_authentication_policy"] =
-        std::string(::Wasm::Common::AuthenticationPolicyString(
-            request_info.service_auth_policy));
+    new_entry->CopyFrom(req.entries()[0]);
   }
   return req;
 }
 
 }  // namespace
 
-TEST(LoggerTest, TestWriteLogEntry) {
+TEST_F(LoggerTest, TestWriteLogEntry) {
   auto exporter = std::make_unique<::testing::NiceMock<MockExporter>>();
   auto exporter_ptr = exporter.get();
   auto logger = std::make_unique<Logger>(nodeInfo(), std::move(exporter));
-  logger->addLogEntry(requestInfo(), peerNodeInfo());
+  logger->addLogEntry(request_info_, peerNodeInfo());
   EXPECT_CALL(*exporter_ptr, exportLogs(::testing::_))
       .WillOnce(::testing::Invoke(
           [](const std::vector<std::unique_ptr<
                  const google::logging::v2::WriteLogEntriesRequest>>&
                  requests) {
-            auto expected_request = expectedRequest(1);
             for (const auto& req : requests) {
-              EXPECT_TRUE(MessageDifferencer::Equals(expected_request, *req));
+              std::string diff;
+              MessageDifferencer differ;
+              differ.ReportDifferencesToString(&diff);
+              if (!differ.Compare(expectedRequest(1), *req)) {
+                FAIL() << "unexpected log entry " << diff << "\n";
+              }
             }
           }));
   logger->exportLogEntry();
 }
 
-TEST(LoggerTest, TestWriteLogEntryRotation) {
+TEST_F(LoggerTest, TestWriteLogEntryRotation) {
   auto exporter = std::make_unique<::testing::NiceMock<MockExporter>>();
   auto exporter_ptr = exporter.get();
-  auto logger = std::make_unique<Logger>(nodeInfo(), std::move(exporter), 900);
+  auto logger = std::make_unique<Logger>(nodeInfo(), std::move(exporter), 1500);
   for (int i = 0; i < 9; i++) {
-    logger->addLogEntry(requestInfo(), peerNodeInfo());
+    logger->addLogEntry(request_info_, peerNodeInfo());
   }
   EXPECT_CALL(*exporter_ptr, exportLogs(::testing::_))
       .WillOnce(::testing::Invoke(
@@ -159,8 +210,12 @@ TEST(LoggerTest, TestWriteLogEntryRotation) {
                  requests) {
             EXPECT_EQ(requests.size(), 3);
             for (const auto& req : requests) {
-              auto expected_request = expectedRequest(3);
-              EXPECT_TRUE(MessageDifferencer::Equals(expected_request, *req));
+              std::string diff;
+              MessageDifferencer differ;
+              differ.ReportDifferencesToString(&diff);
+              if (!differ.Compare(expectedRequest(3), *req)) {
+                FAIL() << "unexpected log entry " << diff << "\n";
+              }
             }
           }));
   logger->exportLogEntry();

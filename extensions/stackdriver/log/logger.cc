@@ -46,11 +46,10 @@ Logger::Logger(const ::wasm::common::NodeInfo& local_node_info,
   // Set log names.
   const auto& platform_metadata = local_node_info.platform_metadata();
   const auto project_iter = platform_metadata.find(Common::kGCPProjectKey);
-  std::string project_id = "";
   if (project_iter != platform_metadata.end()) {
-    project_id = project_iter->second;
+    project_id_ = project_iter->second;
   }
-  log_entries_request_->set_log_name("projects/" + project_id + "/logs/" +
+  log_entries_request_->set_log_name("projects/" + project_id_ + "/logs/" +
                                      kServerAccessLogName);
 
   std::string resource_type = Common::kContainerMonitoredResource;
@@ -72,37 +71,77 @@ Logger::Logger(const ::wasm::common::NodeInfo& local_node_info,
   (*label_map)["destination_workload"] = local_node_info.workload_name();
   (*label_map)["destination_namespace"] = local_node_info.namespace_();
   (*label_map)["mesh_uid"] = local_node_info.mesh_id();
+  // Add destination app and version label if exist.
+  const auto& local_labels = local_node_info.labels();
+  auto version_iter = local_labels.find("version");
+  if (version_iter != local_labels.end()) {
+    (*label_map)["destination_version"] = version_iter->second;
+  }
+  auto app_iter = local_labels.find("app");
+  if (app_iter != local_labels.end()) {
+    (*label_map)["destination_app"] = app_iter->second;
+  }
   log_request_size_limit_ = log_request_size_limit;
   exporter_ = std::move(exporter);
 }
 
-void Logger::addLogEntry(const ::Wasm::Common::RequestInfo& request_info,
+void Logger::addLogEntry(::Wasm::Common::Context::RequestInfo& request_info,
                          const ::wasm::common::NodeInfo& peer_node_info) {
   // create a new log entry
   auto* log_entries = log_entries_request_->mutable_entries();
   auto* new_entry = log_entries->Add();
 
-  const int64_t s = absl::ToUnixSeconds(request_info.start_time);
-  new_entry->mutable_timestamp()->set_seconds(s);
-  new_entry->mutable_timestamp()->set_nanos(
-      (request_info.start_time - absl::FromUnixSeconds(s)) /
-      absl::Nanoseconds(1));
+  *new_entry->mutable_timestamp() = request_info.requestTimestamp();
   new_entry->set_severity(::google::logging::type::INFO);
   auto label_map = new_entry->mutable_labels();
+  (*label_map)["request_id"] = request_info.requestID();
   (*label_map)["source_name"] = peer_node_info.name();
   (*label_map)["source_workload"] = peer_node_info.workload_name();
   (*label_map)["source_namespace"] = peer_node_info.namespace_();
+  (*label_map)["response_flag"] = request_info.responseFlag();
+  // Add source app and version label if exist.
+  const auto& peer_labels = peer_node_info.labels();
+  auto version_iter = peer_labels.find("version");
+  if (version_iter != peer_labels.end()) {
+    (*label_map)["source_version"] = version_iter->second;
+  }
+  auto app_iter = peer_labels.find("app");
+  if (app_iter != peer_labels.end()) {
+    (*label_map)["source_app"] = app_iter->second;
+  }
 
-  (*label_map)["request_operation"] = request_info.request_operation;
   (*label_map)["destination_service_host"] =
-      request_info.destination_service_host;
-  (*label_map)["response_flag"] = request_info.response_flag;
-  (*label_map)["protocol"] = request_info.request_protocol;
-  (*label_map)["destination_principal"] = request_info.destination_principal;
-  (*label_map)["source_principal"] = request_info.source_principal;
+      request_info.destinationServiceHost();
+  (*label_map)["response_flag"] = request_info.responseFlag();
+  (*label_map)["destination_principal"] = request_info.destinationPrincipal();
+  (*label_map)["source_principal"] = request_info.sourcePrincipal();
   (*label_map)["service_authentication_policy"] =
       std::string(::Wasm::Common::AuthenticationPolicyString(
-          request_info.service_auth_policy));
+          request_info.serviceAuthenticationPolicy()));
+
+  // Insert HTTPRequest
+  auto http_request = new_entry->mutable_http_request();
+  http_request->set_request_method(request_info.requestOperation());
+  http_request->set_request_url(request_info.requestScheme() + "://" +
+                                request_info.requestHost() +
+                                request_info.urlPath());
+  http_request->set_request_size(request_info.requestSize());
+  http_request->set_status(request_info.responseCode());
+  http_request->set_response_size(request_info.responseSize());
+  http_request->set_user_agent(request_info.userAgent());
+  http_request->set_remote_ip(request_info.sourceAddress());
+  http_request->set_server_ip(request_info.destinationAddress());
+  http_request->set_protocol(request_info.requestProtocol());
+  *http_request->mutable_latency() = request_info.duration();
+  http_request->set_referer(request_info.referer());
+
+  // Insert trace headers, if exist.
+  const auto& trace_id = request_info.b3TraceID();
+  if (!trace_id.empty()) {
+    new_entry->set_trace("projects/" + project_id_ + "/traces/" + trace_id);
+    new_entry->set_span_id(request_info.b3SpanID());
+    new_entry->set_trace_sampled(request_info.b3TraceSampled());
+  }
   // Accumulate estimated size of the request. If the current request exceeds
   // the size limit, flush the request out.
   size_ += new_entry->ByteSizeLong();

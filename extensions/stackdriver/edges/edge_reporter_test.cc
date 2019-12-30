@@ -18,6 +18,9 @@
 #include <memory>
 
 #include "extensions/stackdriver/common/constants.h"
+#include "extensions/test/mock_request_info.h"
+#include "gmock/gmock-actions.h"
+#include "gmock/gmock.h"
 #include "google/protobuf/text_format.h"
 #include "google/protobuf/util/message_differencer.h"
 #include "google/protobuf/util/time_util.h"
@@ -158,14 +161,6 @@ wasm::common::NodeInfo peerNodeInfo() {
   return node_info;
 }
 
-::Wasm::Common::RequestInfo requestInfo() {
-  ::Wasm::Common::RequestInfo request_info;
-  request_info.destination_service_host = "httpbin.org";
-  request_info.destination_service_name = "httpbin";
-  request_info.request_protocol = "HTTP";
-  return request_info;
-}
-
 ReportTrafficAssertionsRequest want() {
   ReportTrafficAssertionsRequest req;
   TextFormat::ParseFromString(kWantGrpcRequest, &req);
@@ -180,7 +175,22 @@ ReportTrafficAssertionsRequest wantUnknown() {
 
 }  // namespace
 
-TEST(EdgesTest, TestAddEdge) {
+class EdgeReporterTest : public ::testing::Test {
+ public:
+  void SetUp() {
+    ON_CALL(request_info_, destinationServiceName())
+        .WillByDefault(testing::ReturnRef(destination_service_name_));
+    ON_CALL(request_info_, requestProtocol())
+        .WillByDefault(testing::ReturnRef(request_protocol_));
+  }
+
+  ::testing::NiceMock<Wasm::Common::Context::MockRequestInfo> request_info_;
+
+  std::string destination_service_name_ = "httpbin";
+  std::string request_protocol_ = "http";
+};
+
+TEST_F(EdgeReporterTest, TestAddEdge) {
   int calls = 0;
   ReportTrafficAssertionsRequest got;
 
@@ -192,7 +202,7 @@ TEST(EdgesTest, TestAddEdge) {
 
   auto edges = std::make_unique<EdgeReporter>(
       nodeInfo(), std::move(test_client), TimeUtil::GetCurrentTime);
-  edges->addEdge(requestInfo(), "test", peerNodeInfo());
+  edges->addEdge(request_info_, "test", peerNodeInfo());
   edges->reportEdges();
 
   // must ensure that we used the client to report the edges
@@ -205,7 +215,7 @@ TEST(EdgesTest, TestAddEdge) {
                      "ERROR: addEdge() produced unexpected result.");
 }
 
-TEST(EdgeReporterTest, TestRequestEdgeCache) {
+TEST_F(EdgeReporterTest, TestRequestEdgeCache) {
   int calls = 0;
   int num_assertions = 0;
 
@@ -220,7 +230,7 @@ TEST(EdgeReporterTest, TestRequestEdgeCache) {
 
   // force at least three queued reqs + current (four total)
   for (int i = 0; i < 3500; i++) {
-    edges->addEdge(requestInfo(), "test", peerNodeInfo());
+    edges->addEdge(request_info_, "test", peerNodeInfo());
   }
   edges->reportEdges();
 
@@ -230,7 +240,7 @@ TEST(EdgeReporterTest, TestRequestEdgeCache) {
   EXPECT_EQ(1, num_assertions);
 }
 
-TEST(EdgeReporterTest, TestPeriodicFlushAndCacheReset) {
+TEST_F(EdgeReporterTest, TestPeriodicFlushAndCacheReset) {
   int calls = 0;
   int num_assertions = 0;
 
@@ -245,7 +255,7 @@ TEST(EdgeReporterTest, TestPeriodicFlushAndCacheReset) {
 
   // force at least three queued reqs + current (four total)
   for (int i = 0; i < 3500; i++) {
-    edges->addEdge(requestInfo(), "test", peerNodeInfo());
+    edges->addEdge(request_info_, "test", peerNodeInfo());
     // flush on 1000, 2000, 3000
     if (i % 1000 == 0 && i > 0) {
       edges->reportEdges();
@@ -259,7 +269,7 @@ TEST(EdgeReporterTest, TestPeriodicFlushAndCacheReset) {
   EXPECT_EQ(4, num_assertions);
 }
 
-TEST(EdgeReporterTest, TestCacheMisses) {
+TEST_F(EdgeReporterTest, TestCacheMisses) {
   int calls = 0;
   int num_assertions = 0;
 
@@ -274,7 +284,7 @@ TEST(EdgeReporterTest, TestCacheMisses) {
 
   // force at least three queued reqs + current (four total)
   for (int i = 0; i < 3500; i++) {
-    edges->addEdge(requestInfo(), std::to_string(i), peerNodeInfo());
+    edges->addEdge(request_info_, std::to_string(i), peerNodeInfo());
   }
   edges->reportEdges();
 
@@ -282,14 +292,14 @@ TEST(EdgeReporterTest, TestCacheMisses) {
   EXPECT_EQ(3500, num_assertions);
 }
 
-TEST(EdgeReporterTest, TestMissingPeerMetadata) {
+TEST_F(EdgeReporterTest, TestMissingPeerMetadata) {
   ReportTrafficAssertionsRequest got;
 
   auto test_client = std::make_unique<TestMeshEdgesServiceClient>(
       [&got](const ReportTrafficAssertionsRequest& req) { got = req; });
   auto edges = std::make_unique<EdgeReporter>(
       nodeInfo(), std::move(test_client), TimeUtil::GetCurrentTime);
-  edges->addEdge(requestInfo(), "test", wasm::common::NodeInfo());
+  edges->addEdge(request_info_, "test", wasm::common::NodeInfo());
   edges->reportEdges();
 
   // ignore timestamps in proto comparisons.

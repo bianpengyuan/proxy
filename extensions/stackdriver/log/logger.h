@@ -18,7 +18,7 @@
 #include <string>
 #include <vector>
 
-#include "extensions/common/context.h"
+#include "extensions/common/request_info.h"
 #include "extensions/stackdriver/log/exporter.h"
 #include "google/logging/v2/logging.pb.h"
 
@@ -44,7 +44,7 @@ class Logger {
 
   // Add a new log entry based on the given request information and peer node
   // information.
-  void addLogEntry(const ::Wasm::Common::RequestInfo &request_info,
+  void addLogEntry(::Wasm::Common::Context::RequestInfo &request_info,
                    const ::wasm::common::NodeInfo &peer_node_info);
 
   // Export and clean the buffered WriteLogEntriesRequests.
@@ -74,6 +74,9 @@ class Logger {
 
   // Exporter calls Stackdriver services to export access logs.
   std::unique_ptr<Exporter> exporter_;
+
+  // GCP project that this proxy runs with.
+  std::string project_id_;
 };
 
 }  // namespace Log

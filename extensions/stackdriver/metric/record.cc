@@ -27,33 +27,34 @@ namespace Metric {
 
 void record(bool is_outbound, const ::wasm::common::NodeInfo &local_node_info,
             const ::wasm::common::NodeInfo &peer_node_info,
-            const ::Wasm::Common::RequestInfo &request_info) {
-  double latency_ms = request_info.duration / absl::Nanoseconds(1) / 1000.0;
+            ::Wasm::Common::Context::RequestInfo &request_info) {
+  double latency_ms =
+      TimeUtil::DurationToNanoseconds(request_info.duration()) / 1000.0;
   const auto &operation =
-      request_info.request_protocol == ::Wasm::Common::kProtocolGRPC
-          ? request_info.request_url_path
-          : request_info.request_operation;
+      request_info.requestProtocol() == ::Wasm::Common::kProtocolGRPC
+          ? request_info.urlPath()
+          : request_info.requestOperation();
   if (is_outbound) {
     opencensus::stats::Record(
         {{clientRequestCountMeasure(), 1},
-         {clientRequestBytesMeasure(), request_info.request_size},
-         {clientResponseBytesMeasure(), request_info.response_size},
+         {clientRequestBytesMeasure(), request_info.requestSize()},
+         {clientResponseBytesMeasure(), request_info.responseSize()},
          {clientRoundtripLatenciesMeasure(), latency_ms}},
         {{meshUIDKey(), local_node_info.mesh_id()},
          {requestOperationKey(), operation},
-         {requestProtocolKey(), request_info.request_protocol},
+         {requestProtocolKey(), request_info.requestProtocol()},
          {serviceAuthenticationPolicyKey(),
           ::Wasm::Common::AuthenticationPolicyString(
-              request_info.service_auth_policy)},
-         {destinationServiceNameKey(), request_info.destination_service_name},
+              request_info.serviceAuthenticationPolicy())},
+         {destinationServiceNameKey(), request_info.destinationServiceName()},
          {destinationServiceNamespaceKey(), peer_node_info.namespace_()},
-         {destinationPortKey(), std::to_string(request_info.destination_port)},
-         {responseCodeKey(), std::to_string(request_info.response_code)},
-         {sourcePrincipalKey(), request_info.source_principal},
+         {destinationPortKey(), std::to_string(request_info.destinationPort())},
+         {responseCodeKey(), std::to_string(request_info.responseCode())},
+         {sourcePrincipalKey(), request_info.sourcePrincipal()},
          {sourceWorkloadNameKey(), local_node_info.workload_name()},
          {sourceWorkloadNamespaceKey(), local_node_info.namespace_()},
          {sourceOwnerKey(), local_node_info.owner()},
-         {destinationPrincipalKey(), request_info.destination_principal},
+         {destinationPrincipalKey(), request_info.destinationPrincipal()},
          {destinationWorkloadNameKey(), peer_node_info.workload_name()},
          {destinationWorkloadNamespaceKey(), peer_node_info.namespace_()},
          {destinationOwnerKey(), peer_node_info.owner()}});
@@ -62,24 +63,24 @@ void record(bool is_outbound, const ::wasm::common::NodeInfo &local_node_info,
 
   opencensus::stats::Record(
       {{serverRequestCountMeasure(), 1},
-       {serverRequestBytesMeasure(), request_info.request_size},
-       {serverResponseBytesMeasure(), request_info.response_size},
+       {serverRequestBytesMeasure(), request_info.requestSize()},
+       {serverResponseBytesMeasure(), request_info.responseSize()},
        {serverResponseLatenciesMeasure(), latency_ms}},
       {{meshUIDKey(), local_node_info.mesh_id()},
        {requestOperationKey(), operation},
-       {requestProtocolKey(), request_info.request_protocol},
+       {requestProtocolKey(), request_info.requestProtocol()},
        {serviceAuthenticationPolicyKey(),
         ::Wasm::Common::AuthenticationPolicyString(
-            request_info.service_auth_policy)},
-       {destinationServiceNameKey(), request_info.destination_service_name},
+            request_info.serviceAuthenticationPolicy())},
+       {destinationServiceNameKey(), request_info.destinationServiceName()},
        {destinationServiceNamespaceKey(), local_node_info.namespace_()},
-       {destinationPortKey(), std::to_string(request_info.destination_port)},
-       {responseCodeKey(), std::to_string(request_info.response_code)},
-       {sourcePrincipalKey(), request_info.source_principal},
+       {destinationPortKey(), std::to_string(request_info.destinationPort())},
+       {responseCodeKey(), std::to_string(request_info.responseCode())},
+       {sourcePrincipalKey(), request_info.sourcePrincipal()},
        {sourceWorkloadNameKey(), peer_node_info.workload_name()},
        {sourceWorkloadNamespaceKey(), peer_node_info.namespace_()},
        {sourceOwnerKey(), peer_node_info.owner()},
-       {destinationPrincipalKey(), request_info.destination_principal},
+       {destinationPrincipalKey(), request_info.destinationPrincipal()},
        {destinationWorkloadNameKey(), local_node_info.workload_name()},
        {destinationWorkloadNamespaceKey(), local_node_info.namespace_()},
        {destinationOwnerKey(), local_node_info.owner()}});

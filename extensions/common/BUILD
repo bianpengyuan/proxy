@@ -74,6 +74,40 @@ proto_library(
     srcs = ["node_info.proto"],
 )
 
+envoy_cc_library(
+    name = "request_info",
+    srcs = [
+        "request_info.cc",
+    ],
+    hdrs = [
+        "request_info.h",
+    ],
+    repository = "@envoy",
+    visibility = ["//visibility:public"],
+    deps = [
+        ":context",
+        ":request_info_cc_proto",
+        "@envoy//source/extensions/common/wasm:wasm_lib",
+        "@envoy//source/extensions/common/wasm/null:null_plugin_lib",
+    ],
+)
+
+cc_proto_library(
+    name = "request_info_cc_proto",
+    visibility = ["//visibility:private"],
+    deps = ["request_info_proto"],
+)
+
+proto_library(
+    name = "request_info_proto",
+    srcs = ["request_info.proto"],
+    deps = [
+        "@com_google_protobuf//:duration_proto",
+        "@com_google_protobuf//:timestamp_proto",
+        "@com_google_protobuf//:wrappers_proto",
+    ],
+)
+
 envoy_cc_test(
     name = "context_test",
     size = "small",
