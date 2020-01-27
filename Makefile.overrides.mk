@@ -14,4 +14,4 @@
 
 # this repo is not on the container plan by default
 BUILD_WITH_CONTAINER ?= 0
-IMG = gcr.io/istio-testing/build-tools-proxy:master-2020-01-27T02-46-43
+IMG = gcr.io/istio-testing/build-tools-proxy:master-2020-01-27T04-51-23
