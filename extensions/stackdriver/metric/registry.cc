@@ -76,7 +76,7 @@ StackdriverOptions getStackdriverOptions(
       client_monitored_resource;
   options.per_metric_monitored_resource[kClientRoundtripLatenciesView] =
       client_monitored_resource;
-  options.metric_name_prefix = kIstioMetricPrefix;
+  // options.metric_name_prefix = kIstioMetricPrefix;
   return options;
 }
 

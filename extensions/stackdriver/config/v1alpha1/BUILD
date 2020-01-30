@@ -31,3 +31,19 @@ proto_library(
         "@com_google_protobuf//:duration_proto",
     ],
 )
+
+cc_proto_library(
+    name = "stackdriver_stats_sink_config_cc_proto",
+    visibility = [
+        "//extensions/stackdriver/stats:__pkg__",
+    ],
+    deps = ["stackdriver_stats_sink_config_proto"],
+)
+
+proto_library(
+    name = "stackdriver_stats_sink_config_proto",
+    srcs = ["stackdriver_stats_sink_config.proto"],
+    deps = [
+        "@com_google_protobuf//:duration_proto",
+    ],
+)
