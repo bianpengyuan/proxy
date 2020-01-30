@@ -1,0 +1,6 @@
+syntax = "proto3";
+
+package stackdriver.config.v1alpha1;
+
+message StackdriverSink {
+}
