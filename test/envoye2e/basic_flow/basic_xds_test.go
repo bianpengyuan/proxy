@@ -15,12 +15,11 @@
 package client_test
 
 import (
-	"fmt"
 	"testing"
 	"time"
 
+	"istio.io/proxy/test/envoye2e"
 	"istio.io/proxy/test/envoye2e/driver"
-	"istio.io/proxy/test/envoye2e/env"
 )
 
 const ClientHTTPListener = `
@@ -29,7 +28,7 @@ traffic_direction: OUTBOUND
 address:
   socket_address:
     address: 127.0.0.1
-    port_value: {{ .Vars.ClientPort }}
+    port_value: {{ .Ports.ClientPort }}
 filter_chains:
 - filters:
   - name: http
@@ -47,7 +46,7 @@ filter_chains:
           routes:
           - match: { prefix: / }
             route:
-              cluster: server
+              cluster: outbound|9080|http|server.default.svc.cluster.local
               timeout: 0s
 `
 
@@ -57,7 +56,7 @@ traffic_direction: INBOUND
 address:
   socket_address:
     address: 127.0.0.1
-    port_value: {{ .Vars.ServerPort }}
+    port_value: {{ .Ports.ServerPort }}
 filter_chains:
 - filters:
   - name: http
@@ -81,17 +80,7 @@ filter_chains:
 `
 
 func TestBasicHTTP(t *testing.T) {
-	ports := env.NewPorts(env.BasicHTTP)
-	params := &driver.Params{
-		Vars: map[string]string{
-			"BackendPort": fmt.Sprintf("%d", ports.BackendPort),
-			"ClientPort":  fmt.Sprintf("%d", ports.AppToClientProxyPort),
-			"ClientAdmin": fmt.Sprintf("%d", ports.ClientAdminPort),
-			"ServerAdmin": fmt.Sprintf("%d", ports.ServerAdminPort),
-			"ServerPort":  fmt.Sprintf("%d", ports.ClientToServerProxyPort),
-		},
-		XDS: int(ports.XDSPort),
-	}
+	params := driver.NewTestParams(t, map[string]string{}, envoye2e.ProxyE2ETests)
 	if err := (&driver.Scenario{
 		[]driver.Step{
 			&driver.XDS{},
@@ -100,7 +89,7 @@ func TestBasicHTTP(t *testing.T) {
 			&driver.Envoy{Bootstrap: params.LoadTestData("testdata/bootstrap/client.yaml.tmpl")},
 			&driver.Envoy{Bootstrap: params.LoadTestData("testdata/bootstrap/server.yaml.tmpl")},
 			&driver.Sleep{1 * time.Second},
-			driver.Get(ports.AppToClientProxyPort, "hello, world!"),
+			driver.Get(params.Ports.ClientPort, "hello, world!"),
 		},
 	}).Run(params); err != nil {
 		t.Fatal(err)
@@ -108,17 +97,7 @@ func TestBasicHTTP(t *testing.T) {
 }
 
 func TestBasicHTTPwithTLS(t *testing.T) {
-	ports := env.NewPorts(env.BasicHTTPwithTLS)
-	params := &driver.Params{
-		Vars: map[string]string{
-			"BackendPort": fmt.Sprintf("%d", ports.BackendPort),
-			"ClientPort":  fmt.Sprintf("%d", ports.AppToClientProxyPort),
-			"ClientAdmin": fmt.Sprintf("%d", ports.ClientAdminPort),
-			"ServerAdmin": fmt.Sprintf("%d", ports.ServerAdminPort),
-			"ServerPort":  fmt.Sprintf("%d", ports.ClientToServerProxyPort),
-		},
-		XDS: int(ports.XDSPort),
-	}
+	params := driver.NewTestParams(t, map[string]string{}, envoye2e.ProxyE2ETests)
 	params.Vars["ClientTLSContext"] = params.LoadTestData("testdata/transport_socket/client.yaml.tmpl")
 	params.Vars["ServerTLSContext"] = params.LoadTestData("testdata/transport_socket/server.yaml.tmpl")
 	if err := (&driver.Scenario{
@@ -129,7 +108,7 @@ func TestBasicHTTPwithTLS(t *testing.T) {
 			&driver.Envoy{Bootstrap: params.LoadTestData("testdata/bootstrap/client.yaml.tmpl")},
 			&driver.Envoy{Bootstrap: params.LoadTestData("testdata/bootstrap/server.yaml.tmpl")},
 			&driver.Sleep{1 * time.Second},
-			driver.Get(ports.AppToClientProxyPort, "hello, world!"),
+			driver.Get(params.Ports.ClientPort, "hello, world!"),
 		},
 	}).Run(params); err != nil {
 		t.Fatal(err)
@@ -138,17 +117,7 @@ func TestBasicHTTPwithTLS(t *testing.T) {
 
 // Tests with a single combined proxy hosting inbound/outbound listeners
 func TestBasicHTTPGateway(t *testing.T) {
-	ports := env.NewPorts(env.BasicHTTPGateway)
-	params := &driver.Params{
-		Vars: map[string]string{
-			"BackendPort": fmt.Sprintf("%d", ports.BackendPort),
-			"ClientPort":  fmt.Sprintf("%d", ports.AppToClientProxyPort),
-			"ClientAdmin": fmt.Sprintf("%d", ports.ClientAdminPort),
-			"ServerAdmin": fmt.Sprintf("%d", ports.ServerAdminPort),
-			"ServerPort":  fmt.Sprintf("%d", ports.ClientToServerProxyPort),
-		},
-		XDS: int(ports.XDSPort),
-	}
+	params := driver.NewTestParams(t, map[string]string{}, envoye2e.ProxyE2ETests)
 	if err := (&driver.Scenario{
 		[]driver.Step{
 			&driver.XDS{},
@@ -158,7 +127,7 @@ func TestBasicHTTPGateway(t *testing.T) {
 			},
 			&driver.Envoy{Bootstrap: params.LoadTestData("testdata/bootstrap/server.yaml.tmpl")},
 			&driver.Sleep{1 * time.Second},
-			driver.Get(ports.AppToClientProxyPort, "hello, world!"),
+			driver.Get(params.Ports.ClientPort, "hello, world!"),
 		},
 	}).Run(params); err != nil {
 		t.Fatal(err)

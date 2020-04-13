@@ -12,5 +12,23 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-// Package client contains an integration test for envoy proxy.
-package client
+package env
+
+import (
+	"fmt"
+	"testing"
+)
+
+type TestInventory struct {
+	Tests []string
+}
+
+func (p *TestInventory) GetTestIndex(t *testing.T) uint16 {
+	for i, e := range p.Tests {
+		fmt.Printf("e is %v and test is %v", e, t.Name())
+		if e == t.Name() {
+			return uint16(i)
+		}
+	}
+	return 0
+}

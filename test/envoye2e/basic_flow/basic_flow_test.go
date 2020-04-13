@@ -15,65 +15,40 @@
 package client_test
 
 import (
-	"fmt"
 	"testing"
-	"text/template"
 
-	"bytes"
-
-	"istio.io/proxy/test/envoye2e/env"
+	"istio.io/proxy/test/envoye2e"
+	"istio.io/proxy/test/envoye2e/driver"
 )
 
-// Stats in Client Envoy proxy.
-var expectedClientStats = map[string]int{
-	// http listener stats
-	"listener.127.0.0.1_{{.Ports.AppToClientProxyPort}}.http.inbound_http.downstream_rq_completed": 10,
-	"listener.127.0.0.1_{{.Ports.AppToClientProxyPort}}.http.inbound_http.downstream_rq_2xx":       10,
-}
-
-// Stats in Server Envoy proxy.
-var expectedServerStats = map[string]int{
-	// http listener stats
-	"listener.127.0.0.1_{{.Ports.ClientToServerProxyPort}}.http.inbound_http.downstream_rq_completed": 10,
-	"listener.127.0.0.1_{{.Ports.ClientToServerProxyPort}}.http.inbound_http.downstream_rq_2xx":       10,
-}
-
 func TestBasicFlow(t *testing.T) {
-	s := env.NewClientServerEnvoyTestSetup(env.BasicFlowTest, t)
-	if err := s.SetUpClientServerEnvoy(); err != nil {
-		t.Fatalf("Failed to setup test: %v", err)
+	params := driver.NewTestParams(t, map[string]string{
+		"EnableEchoBackend": "true",
+		"RequestCount":      "10",
+	}, envoye2e.ProxyE2ETests)
+	if err := (&driver.Scenario{
+		[]driver.Step{
+			&driver.XDS{},
+			&driver.ClientServerEnvoy{},
+			&driver.Repeat{
+				N: 10,
+				Step: &driver.HTTPCall{
+					Port: params.Ports.ClientPort,
+					Path: "/echo",
+				},
+			},
+			&driver.Stats{
+				AdminPort: params.Ports.ServerAdmin,
+				Matchers: map[string]driver.StatMatcher{
+					"envoy_listener_http_downstream_rq_xx": &driver.PartialStat{Metric: "testdata/metric/basic_flow_server_requests.yaml.tmpl"},
+				}},
+			&driver.Stats{
+				AdminPort: params.Ports.ClientAdmin,
+				Matchers: map[string]driver.StatMatcher{
+					"envoy_listener_http_downstream_rq_xx": &driver.PartialStat{Metric: "testdata/metric/basic_flow_client_requests.yaml.tmpl"},
+				}},
+		},
+	}).Run(params); err != nil {
+		t.Fatal(err)
 	}
-	defer s.TearDownClientServerEnvoy()
-
-	url := fmt.Sprintf("http://localhost:%d/echo", s.Ports().AppToClientProxyPort)
-
-	// Issues a GET echo request with 0 size body
-	tag := "OKGet"
-	for i := 0; i < 10; i++ {
-		if _, _, err := env.HTTPGet(url); err != nil {
-			t.Errorf("Failed in request %s: %v", tag, err)
-		}
-	}
-
-	s.VerifyEnvoyStats(getParsedExpectedStats(expectedClientStats, t, s), s.Ports().ClientAdminPort)
-	s.VerifyEnvoyStats(getParsedExpectedStats(expectedServerStats, t, s), s.Ports().ServerAdminPort)
-}
-
-func getParsedExpectedStats(expectedStats map[string]int, t *testing.T, s *env.TestSetup) map[string]int {
-	parsedExpectedStats := make(map[string]int)
-	for key, value := range expectedStats {
-		tmpl, err := template.New("parse_state").Parse(key)
-		if err != nil {
-			t.Errorf("failed to parse config template: %v", err)
-		}
-
-		var tpl bytes.Buffer
-		err = tmpl.Execute(&tpl, s)
-		if err != nil {
-			t.Errorf("failed to execute config template: %v", err)
-		}
-		parsedExpectedStats[tpl.String()] = value
-	}
-
-	return parsedExpectedStats
 }
