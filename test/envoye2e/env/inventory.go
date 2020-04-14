@@ -15,7 +15,6 @@
 package env
 
 import (
-	"fmt"
 	"testing"
 )
 
@@ -25,7 +24,6 @@ type TestInventory struct {
 
 func (p *TestInventory) GetTestIndex(t *testing.T) uint16 {
 	for i, e := range p.Tests {
-		fmt.Printf("e is %v and test is %v", e, t.Name())
 		if e == t.Name() {
 			return uint16(i)
 		}

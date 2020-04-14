@@ -16,6 +16,7 @@ package driver
 
 import (
 	"bytes"
+	"fmt"
 	"log"
 	"strings"
 	"testing"
@@ -177,5 +178,6 @@ func (p *Params) FillYAML(input string, pb proto.Message) error {
 	if err != nil {
 		return err
 	}
+	fmt.Println(out)
 	return ReadYAML(out, pb)
 }

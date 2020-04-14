@@ -72,7 +72,11 @@ static_resources:
               - match:
                   prefix: "/"
                 direct_response:
+                  {{- if .Vars.DirectResponseCode }}
+                  status: {{ .Vars.DirectResponseCode }}
+                  {{- else }}
                   status: 200
+                  {{- end }}
                   body:
                     inline_string: "hello, world!"
           http_filters:

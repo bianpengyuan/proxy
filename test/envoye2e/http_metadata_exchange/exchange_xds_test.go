@@ -32,7 +32,7 @@ traffic_direction: INBOUND
 address:
   socket_address:
     address: 127.0.0.1
-    port_value: {{ .Vars.ServerPort }}
+    port_value: {{ .Ports.ServerPort }}
 filter_chains:
 - filters:
   - name: envoy.http_connection_manager
@@ -90,7 +90,7 @@ func TestHTTPExchange(t *testing.T) {
 			&driver.Envoy{Bootstrap: params.LoadTestData("testdata/bootstrap/server.yaml.tmpl")},
 			&driver.Sleep{1 * time.Second},
 			&driver.HTTPCall{
-				Port: ports.ClientToServerProxyPort,
+				Port: params.Ports.ServerPort,
 				Body: "hello, world!",
 				ResponseHeaders: map[string]string{
 					"x-envoy-peer-metadata-id": driver.None,
@@ -98,7 +98,7 @@ func TestHTTPExchange(t *testing.T) {
 				},
 			},
 			&driver.HTTPCall{
-				Port: ports.ClientToServerProxyPort,
+				Port: params.Ports.ServerPort,
 				Body: "hello, world!",
 				RequestHeaders: map[string]string{
 					"x-envoy-peer-metadata-id": "client",
@@ -109,7 +109,7 @@ func TestHTTPExchange(t *testing.T) {
 				},
 			},
 			&driver.HTTPCall{
-				Port: ports.ClientToServerProxyPort,
+				Port: params.Ports.ServerPort,
 				Body: "hello, world!",
 				RequestHeaders: map[string]string{
 					"x-envoy-peer-metadata-id": "client",

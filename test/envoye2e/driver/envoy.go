@@ -156,6 +156,9 @@ func (c *ClientEnvoy) Run(p *Params) error {
 	if err := u.Run(p); err != nil {
 		return err
 	}
+	if _, ok := p.Vars["ClientMetadata"]; !ok {
+		p.Vars["ClientMetadata"] = p.LoadTestData("testdata/client_node_metadata.json.tmpl")
+	}
 	c.e = &Envoy{
 		Bootstrap: p.LoadTestData("testdata/bootstrap/client.yaml.tmpl"),
 	}
@@ -187,6 +190,9 @@ func (s *ServerEnvoy) Run(p *Params) error {
 	if err := u.Run(p); err != nil {
 		return err
 	}
+	if _, ok := p.Vars["ServerMetadata"]; !ok {
+		p.Vars["ServerMetadata"] = p.LoadTestData("testdata/server_node_metadata.json.tmpl")
+	}
 	s.e = &Envoy{
 		Bootstrap: p.LoadTestData("testdata/bootstrap/server.yaml.tmpl"),
 	}
@@ -210,7 +216,7 @@ func (s *ServerEnvoy) Run(p *Params) error {
 
 func (s *ServerEnvoy) Cleanup() {
 	s.e.Cleanup()
-	s.httpBackend.Stop()
+	// s.httpBackend.Stop()
 }
 
 // ClientServerEnvoy models a default client side and server side proxy
@@ -222,16 +228,12 @@ type ClientServerEnvoy struct {
 var _ Step = &ClientServerEnvoy{}
 
 func (cs *ClientServerEnvoy) Run(p *Params) error {
-	cs.ce = &ClientEnvoy{
-		e: &Envoy{Bootstrap: p.LoadTestData("testdata/bootstrap/client.yaml.tmpl")},
-	}
+	cs.ce = &ClientEnvoy{}
 	if err := cs.ce.Run(p); err != nil {
 		return err
 	}
 
-	cs.se = &ServerEnvoy{
-		e: &Envoy{Bootstrap: p.LoadTestData("testdata/bootstrap/server.yaml.tmpl")},
-	}
+	cs.se = &ServerEnvoy{}
 	var err error
 	if err = cs.se.Run(p); err != nil {
 		return err

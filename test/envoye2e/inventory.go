@@ -27,6 +27,16 @@ func init() {
 			"TestBasicHTTP",
 			"TestBasicHTTPwithTLS",
 			"TestBasicHTTPGateway",
+			"TestHTTPExchange",
+			"TestStackdriverAccessLog/StackdriverAndAccessLogPlugin",
+			"TestStackdriverAccessLog/RequestGetsLoggedAgain",
+			"TestStackdriverAccessLog/AllErrorRequestsGetsLogged",
+			"TestStackdriverPayload",
+			"TestStackdriverPayloadGateway",
+			"TestStackdriverPayloadWithTLS",
+			"TestStackdriverReload",
+			"TestStackdriverVMReload",
+			"TestStackdriverParallel",
 		},
 	}
 }

@@ -33,7 +33,7 @@ traffic_direction: OUTBOUND
 address:
   socket_address:
     address: 127.0.0.1
-    port_value: {{ .Vars.ClientPort }}
+    port_value: {{ .Ports.ClientPort }}
 filter_chains:
 - filters:
   - name: http
@@ -87,7 +87,7 @@ traffic_direction: INBOUND
 address:
   socket_address:
     address: 127.0.0.1
-    port_value: {{ .Vars.ServerPort }}
+    port_value: {{ .Ports.ServerPort }}
 filter_chains:
 - filters:
   - name: http
