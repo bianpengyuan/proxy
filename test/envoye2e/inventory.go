@@ -37,6 +37,16 @@ func init() {
 			"TestStackdriverReload",
 			"TestStackdriverVMReload",
 			"TestStackdriverParallel",
+			"TestStatsPayload/Default/envoy.wasm.runtime.null",
+			"TestStatsPayload/Customized/envoy.wasm.runtime.null",
+			"TestStatsPayload/UseHostHeader/envoy.wasm.runtime.null",
+			"TestStatsPayload/DisableHostHeader/envoy.wasm.runtime.null",
+			"TestStatsPayload/Default/envoy.wasm.runtime.v8",
+			"TestStatsPayload/Customized/envoy.wasm.runtime.v8",
+			"TestStatsPayload/UseHostHeader/envoy.wasm.runtime.v8",
+			"TestStatsPayload/DisableHostHeader/envoy.wasm.runtime.v8",
+			"TestStatsParallel",
+			"TestStatsGrpc",
 		},
 	}
 }

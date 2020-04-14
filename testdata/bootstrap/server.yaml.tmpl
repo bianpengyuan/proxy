@@ -39,6 +39,9 @@ static_resources:
   - name: inbound|9080|http|server.default.svc.cluster.local
     connect_timeout: 1s
     type: STATIC
+    {{- if eq .Vars.UsingGrpcBackend "true" }}
+    http2_protocol_options: {}
+    {{- end }}
     load_assignment:
       cluster_name: inbound|9080|http|server.default.svc.cluster.local
       endpoints:

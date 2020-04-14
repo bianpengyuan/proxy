@@ -11,6 +11,7 @@ require (
 	github.com/d4l3k/messagediff v1.2.2-0.20180726183240-b9e99b2f9263
 	github.com/envoyproxy/go-control-plane v0.9.5
 	github.com/ghodss/yaml v1.0.0
+	github.com/gogo/status v1.1.0
 	github.com/golang/protobuf v1.3.3
 	github.com/prometheus/client_model v0.2.0
 	github.com/prometheus/common v0.9.1

@@ -210,6 +210,7 @@ filter_chains:
 func TestStackdriverPayload(t *testing.T) {
 	params := driver.NewTestParams(t, map[string]string{
 		"ServiceAuthenticationPolicy": "NONE",
+		"SDLogStatusCode":             "200",
 		"StackdriverRootCAFile":       driver.TestPath("testdata/certs/stackdriver.pem"),
 		"StackdriverTokenFile":        driver.TestPath("testdata/certs/access-token"),
 		"StatsConfig":                 driver.LoadTestData("testdata/bootstrap/stats.yaml.tmpl"),
@@ -253,6 +254,7 @@ func TestStackdriverPayload(t *testing.T) {
 func TestStackdriverPayloadGateway(t *testing.T) {
 	params := driver.NewTestParams(t, map[string]string{
 		"RequestPath":           "echo",
+		"SDLogStatusCode":       "200",
 		"StackdriverRootCAFile": driver.TestPath("testdata/certs/stackdriver.pem"),
 		"StackdriverTokenFile":  driver.TestPath("testdata/certs/access-token"),
 		"StatsConfig":           driver.LoadTestData("testdata/bootstrap/stats.yaml.tmpl"),
@@ -295,6 +297,7 @@ func TestStackdriverPayloadGateway(t *testing.T) {
 func TestStackdriverPayloadWithTLS(t *testing.T) {
 	params := driver.NewTestParams(t, map[string]string{
 		"ServiceAuthenticationPolicy": "MUTUAL_TLS",
+		"SDLogStatusCode":             "200",
 		"SourcePrincipal":             "spiffe://cluster.local/ns/default/sa/client",
 		"DestinationPrincipal":        "spiffe://cluster.local/ns/default/sa/server",
 		"StackdriverRootCAFile":       driver.TestPath("testdata/certs/stackdriver.pem"),
@@ -344,6 +347,7 @@ func TestStackdriverReload(t *testing.T) {
 	env.SkipTSanASan(t)
 	params := driver.NewTestParams(t, map[string]string{
 		"ServiceAuthenticationPolicy": "NONE",
+		"SDLogStatusCode":             "200",
 		"StackdriverRootCAFile":       driver.TestPath("testdata/certs/stackdriver.pem"),
 		"StackdriverTokenFile":        driver.TestPath("testdata/certs/access-token"),
 	}, envoye2e.ProxyE2ETests)
@@ -387,6 +391,7 @@ func TestStackdriverVMReload(t *testing.T) {
 	env.SkipTSanASan(t)
 	params := driver.NewTestParams(t, map[string]string{
 		"ServiceAuthenticationPolicy": "NONE",
+		"SDLogStatusCode":             "200",
 		"StackdriverRootCAFile":       driver.TestPath("testdata/certs/stackdriver.pem"),
 		"StackdriverTokenFile":        driver.TestPath("testdata/certs/access-token"),
 		"ReloadVM":                    "true",
@@ -429,6 +434,7 @@ func TestStackdriverVMReload(t *testing.T) {
 // Expects estimated 10s log dumping interval from stackdriver
 func TestStackdriverParallel(t *testing.T) {
 	params := driver.NewTestParams(t, map[string]string{
+		"SDLogStatusCode":       "200",
 		"StackdriverRootCAFile": driver.TestPath("testdata/certs/stackdriver.pem"),
 		"StackdriverTokenFile":  driver.TestPath("testdata/certs/access-token"),
 	}, envoye2e.ProxyE2ETests)
