@@ -52,7 +52,7 @@ static_resources:
                 address: 127.0.0.1
                 port_value: {{ .Ports.BackendPort }}
 {{ .Vars.ServerStaticCluster | indent 2 }}
-{{- if ne .Vars.EnableEchoBackend "true" }}
+{{- if ne .Vars.DisableDirectResponse "true" }}
   listeners:
   - name: staticreply
     address:

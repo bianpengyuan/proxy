@@ -27,6 +27,7 @@ func init() {
 			"TestBasicHTTP",
 			"TestBasicHTTPwithTLS",
 			"TestBasicHTTPGateway",
+			"TestBasicTCPFlow",
 			"TestHTTPExchange",
 			"TestStackdriverAccessLog/StackdriverAndAccessLogPlugin",
 			"TestStackdriverAccessLog/RequestGetsLoggedAgain",
@@ -47,6 +48,8 @@ func init() {
 			"TestStatsPayload/DisableHostHeader/envoy.wasm.runtime.v8",
 			"TestStatsParallel",
 			"TestStatsGrpc",
+			"TestTCPMetadataExchange",
+			"TestTCPMetadataExchangeNoAlpn",
 		},
 	}
 }

@@ -358,7 +358,7 @@ func TestStatsGrpc(t *testing.T) {
 		"MetadataExchangeFilterCode": "inline_string: \"envoy.wasm.metadata_exchange\"",
 		"StatsFilterCode":            "inline_string: \"envoy.wasm.stats\"",
 		"WasmRuntime":                "envoy.wasm.runtime.null",
-		"EnableEchoBackend":          "true",
+		"DisableDirectResponse":      "true",
 		"UsingGrpcBackend":           "true",
 		"GrpcResponseStatus":         "7",
 		"StatsConfig":                driver.LoadTestData("testdata/bootstrap/stats.yaml.tmpl"),
