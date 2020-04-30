@@ -49,6 +49,7 @@ func init() {
 			"TestStatsPayload/DisableHostHeader/envoy.wasm.runtime.v8",
 			"TestStatsParallel",
 			"TestStatsGrpc",
+			"TestStatsRemoteLoad",
 			"TestTCPMetadataExchange",
 			"TestTCPMetadataExchangeNoAlpn",
 		},
