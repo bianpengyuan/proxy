@@ -48,16 +48,12 @@ filter_chains:
                 vm_id: stats_inbound
                 runtime: envoy.wasm.runtime.v8
                 code:
-                  {{- if .Vars.UseLocalFile }}
-                  local: { filename: stats-d1dd3cef40fd1e78d7840a6d58f2c351cbc8add4.wasm }
-                  {{- else }}
                   remote:
                     http_uri:
-                      uri: http://plevyak.com/stats-d1dd3cef40fd1e78d7840a6d58f2c351cbc8add4.wasm
-                      cluster: plevyak.com
+                      uri: https://storage.googleapis.com/istio-build/proxy/stats-d1dd3cef40fd1e78d7840a6d58f2c351cbc8add4.wasm
+                      cluster: storage.googleapis.com
                       timeout: 10s
                     sha256: d2b63d70af78690e377bc9989ace94ad8889ef45c2307f605c9e149c226a3535
-                  {{- end }}
               configuration: |
                 {{ .Vars.StatsFilterServerConfig }}
       - name: envoy.filters.http.router
@@ -72,24 +68,24 @@ filter_chains:
               cluster: inbound|9080|http|server.default.svc.cluster.local
               timeout: 0s`
 
-const StorageCluster = `- name: plevyak.com
+const StorageCluster = `- name: storage.googleapis.com
   connect_timeout: 10s
   type: STRICT_DNS
   dns_refresh_rate: 5s
-  http2_protocol_options: {}
+  transport_socket:
+    name: envoy.transport_sockets.tls
   load_assignment:
-    cluster_name: plevyak.com
+    cluster_name: storage.googleapis.com
     endpoints:
     - lb_endpoints:
       - endpoint:
           address:
             socket_address:
-              address: plevyak.com
-              port_value: 80`
+              address: storage.googleapis.com
+              port_value: 443`
 
 func TestStatsRemoteLoad(t *testing.T) {
 	params := driver.NewTestParams(t, map[string]string{
-		"UseLocalFile":            "true",
 		"ServerStaticCluster":     StorageCluster,
 		"StatsConfig":             driver.LoadTestData("testdata/bootstrap/stats.yaml.tmpl"),
 		"StatsFilterServerConfig": driver.LoadTestJSON("testdata/stats/server_config.yaml"),
