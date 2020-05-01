@@ -70,7 +70,7 @@ filter_chains:
 
 const StorageCluster = `- name: storage.googleapis.com
   connect_timeout: 10s
-  type: STRICT_DNS
+  type: STATIC
   dns_refresh_rate: 5s
   transport_socket:
     name: envoy.transport_sockets.tls
@@ -81,7 +81,7 @@ const StorageCluster = `- name: storage.googleapis.com
       - endpoint:
           address:
             socket_address:
-              address: storage.googleapis.com
+              address: 172.217.212.128
               port_value: 443`
 
 func TestStatsRemoteLoad(t *testing.T) {
