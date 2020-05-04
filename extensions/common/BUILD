@@ -47,7 +47,7 @@ envoy_cc_library(
     visibility = ["//visibility:public"],
     deps = [
         ":node_info_fb_cc",
-        "@envoy//source/extensions/common/wasm/null:null_plugin_lib",
+        "@proxy_wasm_cpp_host//:lib",
     ],
 )
 
@@ -64,7 +64,7 @@ envoy_cc_library(
     deps = [
         ":node_info_fb_cc",
         "@com_google_protobuf//:protobuf",
-        "@envoy//source/extensions/common/wasm/null:null_plugin_lib",
+        "@proxy_wasm_cpp_host//:lib",
     ],
 )
 

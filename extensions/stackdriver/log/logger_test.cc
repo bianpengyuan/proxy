@@ -22,6 +22,7 @@
 #include "gmock/gmock.h"
 #include "google/logging/v2/log_entry.pb.h"
 #include "google/protobuf/util/json_util.h"
+#include "google/protobuf/util/time_util.h"
 #include "google/protobuf/util/message_differencer.h"
 #include "gtest/gtest.h"
 

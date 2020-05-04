@@ -59,7 +59,7 @@ envoy_cc_library(
         "//extensions/stackdriver/common:metrics",
         "//extensions/stackdriver/common:utils",
         "@com_google_googleapis//google/logging/v2:logging_cc_proto",
-        "@envoy//source/extensions/common/wasm/null:null_plugin_lib",
+        "@proxy_wasm_cpp_host//:lib",
     ],
 )
 

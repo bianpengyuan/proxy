@@ -27,7 +27,7 @@ namespace Stackdriver {
 namespace Log {
 
 #ifdef NULL_PLUGIN
-using Envoy::Extensions::Common::Wasm::Null::Plugin::Extensions::Stackdriver::
+using proxy_wasm::null_plugin::Extensions::Stackdriver::
     Log::Exporter;
 #endif
 

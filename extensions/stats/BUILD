@@ -40,7 +40,7 @@ envoy_cc_library(
         "//extensions/common:context",
         "//extensions/common:json_util",
         "@envoy//api/wasm/cpp/contrib:contrib_lib",
-        "@envoy//source/extensions/common/wasm/null:null_plugin_lib",
+        "@proxy_wasm_cpp_host//:lib",
     ],
 )
 

@@ -30,14 +30,10 @@
 #include "api/wasm/cpp/proxy_wasm_intrinsics.h"
 #else
 
-#include "extensions/common/wasm/null/null.h"
+#include "include/proxy-wasm/null_plugin.h"
 
-namespace Envoy {
-namespace Extensions {
-namespace Common {
-namespace Wasm {
-namespace Null {
-namespace Plugin {
+namespace proxy_wasm {
+namespace null_plugin {
 #endif
 namespace Stackdriver {
 
@@ -45,7 +41,6 @@ using namespace opencensus::exporters::stats;
 using namespace google::protobuf::util;
 using namespace ::Extensions::Stackdriver::Common;
 using namespace ::Extensions::Stackdriver::Metric;
-using Envoy::Extensions::Common::Wasm::Null::Plugin::getValue;
 using ::Extensions::Stackdriver::Edges::EdgeReporter;
 using Extensions::Stackdriver::Edges::MeshEdgesServiceClientImpl;
 using Extensions::Stackdriver::Log::ExporterImpl;
@@ -147,7 +142,7 @@ std::string getMonitoringEndpoint() {
 
 }  // namespace
 
-bool StackdriverRootContext::onConfigure(size_t) {
+bool StackdriverRootContext::onConfigure(size_t configuration_size) {
   // onStart is called prior to onConfigure
   if (enableServerAccessLog() || enableEdgeReporting()) {
     proxy_set_tick_period_milliseconds(getLoggingExportIntervalMilliseconds());
@@ -155,16 +150,21 @@ bool StackdriverRootContext::onConfigure(size_t) {
     proxy_set_tick_period_milliseconds(0);
   }
 
-  WasmDataPtr configuration = getConfiguration();
+  // Parse configuration JSON string.
+  const char* configuration_ptr = nullptr;
+  size_t size;
+  proxy_get_buffer_bytes(WasmBufferType::PluginConfiguration, 0,
+                         configuration_size, &configuration_ptr, &size);
+  std::string configuration(configuration, size);
   // TODO: add config validation to reject the listener if project id is not in
   // metadata. Parse configuration JSON string.
   JsonParseOptions json_options;
   json_options.ignore_unknown_fields = true;
   Status status =
-      JsonStringToMessage(configuration->toString(), &config_, json_options);
+      JsonStringToMessage(configuration, &config_, json_options);
   if (status != Status::OK) {
     logWarn("Cannot parse Stackdriver plugin configuration JSON string " +
-            configuration->toString() + ", " + status.message().ToString());
+            configuration + ", " + status.message().ToString());
     return false;
   }
 
@@ -369,10 +369,6 @@ void StackdriverContext::onLog() {
 }  // namespace Stackdriver
 
 #ifdef NULL_PLUGIN
-}  // namespace Plugin
-}  // namespace Null
-}  // namespace Wasm
-}  // namespace Common
-}  // namespace Extensions
-}  // namespace Envoy
+}  // namespace null_plugin
+}  // namespace proxy_wasm
 #endif
