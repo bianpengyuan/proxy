@@ -9,6 +9,6 @@
           vm_id: stats_inbound{{ .N }}
           runtime: {{ .Vars.WasmRuntime }}
           code:
-            local: { {{ .Vars.StatsFilterCode }} }
+{{ .Vars.StatsFilterCode | indent 12 }}
         configuration: |
           {{ .Vars.StatsFilterServerConfig }}

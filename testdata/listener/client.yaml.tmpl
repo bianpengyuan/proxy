@@ -30,7 +30,7 @@ filter_chains:
                 {{- end }}
                 code:
                   {{- if .Vars.MetadataExchangeFilterCode }}
-                  local: { {{ .Vars.MetadataExchangeFilterCode }} }
+{{ .Vars.MetadataExchangeFilterCode | indent 18 }}
                   {{- else }}
                   local: { inline_string: "envoy.wasm.metadata_exchange" }
                   {{- end }}

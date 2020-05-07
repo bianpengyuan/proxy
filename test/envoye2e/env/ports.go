@@ -79,6 +79,7 @@ type Ports struct {
 	ClientPort  uint16
 	ServerPort  uint16
 	ServerAdmin uint16
+	Max         uint16
 }
 
 func allocPortBase(name uint16) uint16 {
@@ -119,5 +120,6 @@ func NewPorts(name uint16) *Ports {
 		XDSPort:                 base + 5,
 		SDPort:                  base + 6,
 		STSPort:                 base + 7,
+		Max:                     base + 7,
 	}
 }
