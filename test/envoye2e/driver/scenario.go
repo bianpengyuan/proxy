@@ -118,6 +118,9 @@ func (p *Params) Fill(s string) (string, error) {
 				pad := strings.Repeat(" ", n)
 				return pad + strings.Replace(s, "\n", "\n"+pad, -1)
 			},
+			"increment": func(p uint16, inc uint16) uint16 {
+				return p + inc
+			},
 		}).
 		Parse(s))
 	var b bytes.Buffer

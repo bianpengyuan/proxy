@@ -15,6 +15,7 @@
 package client
 
 import (
+	"crypto/sha256"
 	"fmt"
 	"os"
 	"strconv"
@@ -54,7 +55,7 @@ filter_chains:
               vm_config:
                 runtime: {{ .Vars.WasmRuntime }}
                 code:
-                  local: { {{ .Vars.MetadataExchangeFilterCode }} }
+{{ .Vars.MetadataExchangeFilterCode | indent 18 }}
               configuration: |
                 { "max_peer_cache_size": 20 }
       - name: envoy.filters.http.wasm
@@ -68,7 +69,7 @@ filter_chains:
                 vm_id: stats_outbound{{ .N }}
                 runtime: {{ .Vars.WasmRuntime }}
                 code:
-                  local: { {{ .Vars.StatsFilterCode }} }
+{{ .Vars.StatsFilterCode | indent 18 }}
               configuration: |
                 {{ .Vars.StatsFilterClientConfig }}
       - name: envoy.filters.http.router
@@ -112,7 +113,7 @@ filter_chains:
               vm_config:
                 runtime: {{ .Vars.WasmRuntime }}
                 code:
-                  local: { {{ .Vars.MetadataExchangeFilterCode }} }
+{{ .Vars.MetadataExchangeFilterCode | indent 18 }}
               configuration: |
                 { "max_peer_cache_size": 20 }
       - name: envoy.filters.http.wasm
@@ -126,7 +127,7 @@ filter_chains:
                 vm_id: stats_inbound{{ .N }}
                 runtime: {{ .Vars.WasmRuntime }}
                 code:
-                  local: { {{ .Vars.StatsFilterCode }} }
+{{ .Vars.StatsFilterCode | indent 18 }}
               configuration: |
                 {{ .Vars.StatsFilterServerConfig }}
       - name: envoy.filters.http.router
@@ -185,13 +186,13 @@ var Runtimes = []struct {
 	WasmRuntime                string
 }{
 	{
-		MetadataExchangeFilterCode: "inline_string: \"envoy.wasm.metadata_exchange\"",
-		StatsFilterCode:            "inline_string: \"envoy.wasm.stats\"",
+		MetadataExchangeFilterCode: "local: { inline_string: \"envoy.wasm.metadata_exchange\" }",
+		StatsFilterCode:            "local: { inline_string: \"envoy.wasm.stats\" }",
 		WasmRuntime:                "envoy.wasm.runtime.null",
 	},
 	{
-		MetadataExchangeFilterCode: "filename: extensions/metadata_exchange/plugin.wasm",
-		StatsFilterCode:            "filename: extensions/stats/plugin.wasm",
+		MetadataExchangeFilterCode: "local: { filename: extensions/metadata_exchange/plugin.wasm }",
+		StatsFilterCode:            "local: { filename: extensions/stats/plugin.wasm }",
 		WasmRuntime:                "envoy.wasm.runtime.v8",
 	},
 }
@@ -294,8 +295,8 @@ func TestStatsParallel(t *testing.T) {
 	env.SkipTSanASan(t)
 	params := driver.NewTestParams(t, map[string]string{
 		"RequestCount":               "1",
-		"MetadataExchangeFilterCode": "inline_string: \"envoy.wasm.metadata_exchange\"",
-		"StatsFilterCode":            "inline_string: \"envoy.wasm.stats\"",
+		"MetadataExchangeFilterCode": "local: { inline_string: \"envoy.wasm.metadata_exchange\" }",
+		"StatsFilterCode":            "local: { inline_string: \"envoy.wasm.stats\" }",
 		"WasmRuntime":                "envoy.wasm.runtime.null",
 		"StatsConfig":                driver.LoadTestData("testdata/bootstrap/stats.yaml.tmpl"),
 		"StatsFilterClientConfig":    driver.LoadTestJSON("testdata/stats/client_config.yaml"),
@@ -355,8 +356,8 @@ func TestStatsParallel(t *testing.T) {
 func TestStatsGrpc(t *testing.T) {
 	params := driver.NewTestParams(t, map[string]string{
 		"RequestCount":               "10",
-		"MetadataExchangeFilterCode": "inline_string: \"envoy.wasm.metadata_exchange\"",
-		"StatsFilterCode":            "inline_string: \"envoy.wasm.stats\"",
+		"MetadataExchangeFilterCode": "local: { inline_string: \"envoy.wasm.metadata_exchange\" }",
+		"StatsFilterCode":            "local: { inline_string: \"envoy.wasm.stats\" }",
 		"WasmRuntime":                "envoy.wasm.runtime.null",
 		"DisableDirectResponse":      "true",
 		"UsingGrpcBackend":           "true",
@@ -391,6 +392,63 @@ func TestStatsGrpc(t *testing.T) {
 				Matchers: map[string]driver.StatMatcher{
 					"istio_requests_total": &driver.ExactStat{Metric: "testdata/metric/client_request_total.yaml.tmpl"},
 				}},
+		},
+	}).Run(params); err != nil {
+		t.Fatal(err)
+	}
+}
+
+func TestStatsRemoteLoad(t *testing.T) {
+	if os.Getenv("WASM") == "" {
+		t.Skip("Skip test since Wasm file is not generated")
+	}
+	f := driver.LoadTestData("extensions/stats/plugin.wasm")
+	statsSum := sha256.Sum256([]byte(f))
+	f = driver.LoadTestData("extensions/metadata_exchange/plugin.wasm")
+	mxSum := sha256.Sum256([]byte(f))
+	params := driver.NewTestParams(t, map[string]string{
+		"RequestCount":            "10",
+		"WasmRuntime":             "envoy.wasm.runtime.v8",
+		"StatsConfig":             driver.LoadTestData("testdata/bootstrap/stats.yaml.tmpl"),
+		"StatsFilterServerConfig": driver.LoadTestJSON("testdata/stats/server_config.yaml"),
+		"StatsFilterClientConfig": driver.LoadTestJSON("testdata/stats/server_config.yaml"),
+		"StatsWasmSHA256":         fmt.Sprintf("%x", statsSum),
+		"MXWasmSHA256":            fmt.Sprintf("%x", mxSum),
+		"EnableMetadataExchange":  "true",
+	}, envoye2e.ProxyE2ETests)
+	params.Vars["ClientMetadata"] = params.LoadTestData("testdata/client_node_metadata.json.tmpl")
+	params.Vars["ServerMetadata"] = params.LoadTestData("testdata/server_node_metadata.json.tmpl")
+	params.Vars["StatsFilterCode"] = params.LoadTestData("testdata/filters/stats_remote_load_configuration.yaml.tmpl")
+	params.Vars["MetadataExchangeFilterCode"] = params.LoadTestData("testdata/filters/mx_remote_load_configuration.yaml.tmpl")
+
+	if err := (&driver.Scenario{
+		Steps: []driver.Step{
+			&driver.XDS{},
+			&driver.FileServer{Port: params.Ports.Max + 1},
+			&driver.Update{
+				Node:      "client",
+				Version:   "0",
+				Clusters:  []string{params.LoadTestData("testdata/cluster/wasm_file_server.yaml.tmpl")},
+				Listeners: []string{StatsClientHTTPListener},
+			},
+			&driver.Update{
+				Node:      "server",
+				Version:   "0",
+				Clusters:  []string{params.LoadTestData("testdata/cluster/wasm_file_server.yaml.tmpl")},
+				Listeners: []string{StatsServerHTTPListener},
+			},
+			&driver.Envoy{Bootstrap: params.LoadTestData("testdata/bootstrap/server.yaml.tmpl")},
+			&driver.Envoy{Bootstrap: params.LoadTestData("testdata/bootstrap/client.yaml.tmpl")},
+			&driver.Sleep{Duration: 3 * time.Second},
+			&driver.Repeat{N: 10,
+				Step: &driver.HTTPCall{
+					Port: params.Ports.ClientPort,
+					Body: "hello, world!",
+				},
+			},
+			&driver.Stats{params.Ports.ServerAdmin, map[string]driver.StatMatcher{
+				"istio_requests_total": &driver.ExactStat{"testdata/metric/server_request_total.yaml.tmpl"},
+			}},
 		},
 	}).Run(params); err != nil {
 		t.Fatal(err)

@@ -1,0 +1,6 @@
+remote:
+  http_uri:
+    uri: http://127.0.0.1:{{ increment .Ports.Max 1 }}/extensions/stats/plugin.wasm
+    cluster: wasm-file-server
+    timeout: 10s
+  sha256: {{ .Vars.StatsWasmSHA256 }}

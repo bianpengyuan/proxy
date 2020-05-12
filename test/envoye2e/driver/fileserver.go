@@ -1,0 +1,50 @@
+// Copyright 2020 Istio Authors
+//
+// Licensed under the Apache License, Version 2.0 (the "License");
+// you may not use this file except in compliance with the License.
+// You may obtain a copy of the License at
+//
+//     http://www.apache.org/licenses/LICENSE-2.0
+//
+// Unless required by applicable law or agreed to in writing, software
+// distributed under the License is distributed on an "AS IS" BASIS,
+// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+// See the License for the specific language governing permissions and
+// limitations under the License.
+
+package driver
+
+import (
+	"fmt"
+	"net"
+	"net/http"
+)
+
+type FileServer struct {
+	lis  net.Listener
+	Port uint16
+}
+
+var _ Step = &FileServer{}
+
+func (f *FileServer) Run(p *Params) error {
+	var err error
+	f.lis, err = net.Listen("tcp", fmt.Sprintf(":%d", f.Port))
+	if err != nil {
+		return err
+	}
+	m := http.NewServeMux()
+	server := http.Server{
+		Addr:    fmt.Sprintf(":%d", f.Port),
+		Handler: m,
+	}
+	go func() {
+		m.Handle("/", http.FileServer(http.Dir(BazelWorkspace())))
+		server.Serve(f.lis)
+	}()
+	return nil
+}
+
+func (f *FileServer) Cleanup() {
+	f.lis.Close()
+}
