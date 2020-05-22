@@ -13,10 +13,12 @@
  * limitations under the License.
  */
 
-#include "extensions/attributegen/plugin.h"
+// #include "extensions/attributegen/plugin.h"
 
 #include <set>
 #include <unordered_map>
+
+#include "extensions/filters/http/wasm/wasm_filter.h"
 
 #include "common/buffer/buffer_impl.h"
 #include "common/http/message_impl.h"
@@ -68,22 +70,28 @@ class TestFilter : public Envoy::Extensions::Common::Wasm::Context {
              Envoy::Extensions::Common::Wasm::PluginSharedPtr plugin)
       : Envoy::Extensions::Common::Wasm::Context(wasm, root_context_id,
                                                  plugin) {}
-
-  MOCK_CONTEXT_LOG_;
+  void log(const Http::RequestHeaderMap* request_headers,
+           const Http::ResponseHeaderMap* response_headers,
+           const Http::ResponseTrailerMap* response_trailers,
+           const StreamInfo::StreamInfo& stream_info) override {
+    Envoy::Extensions::Common::Wasm::Context::log(request_headers, response_headers,
+                                                  response_trailers, stream_info);
+  }
+  // MOCK_CONTEXT_LOG_;
 };
 
 class TestRoot : public Envoy::Extensions::Common::Wasm::Context {
  public:
   TestRoot() {}
 
-  MOCK_CONTEXT_LOG_;
+  // MOCK_CONTEXT_LOG_;
 
-  WasmResult defineMetric(proxy_wasm::MetricType type, absl::string_view name,
+  proxy_wasm::WasmResult defineMetric(proxy_wasm::MetricType type, absl::string_view name,
                           uint32_t* metric_id_ptr) override {
     auto rs = Envoy::Extensions::Common::Wasm::Context::defineMetric(
         type, name, metric_id_ptr);
     metrics_[std::string(name)] = *metric_id_ptr;
-    log_(spdlog::level::err, absl::StrCat(name, " = ", *metric_id_ptr));
+    // scriptLog_(spdlog::level::err, absl::StrCat(name, " = ", *metric_id_ptr));
     return rs;
   }
 

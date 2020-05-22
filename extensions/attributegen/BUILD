@@ -69,10 +69,6 @@ envoy_extension_cc_test(
     repository = "@envoy",
     deps = [
         ":attributegen_plugin",
-        "//external:abseil_hash_testing",
-        "@envoy//source/common/stream_info:stream_info_lib",
-        "@envoy//source/extensions/common/wasm:wasm_interoperation_lib",
-        "@envoy//source/extensions/common/wasm:wasm_lib",
         "@envoy//source/extensions/filters/http/wasm:wasm_filter_lib",
         "@envoy//test/mocks/grpc:grpc_mocks",
         "@envoy//test/mocks/http:http_mocks",
@@ -85,14 +81,5 @@ envoy_extension_cc_test(
         "@envoy//test/test_common:environment_lib",
         "@envoy//test/test_common:utility_lib",
         "@envoy//test/test_common:wasm_lib",
-
-        "@envoy//source/common/common:hex_lib",
-        "@envoy//source/common/crypto:utility_lib",
-        "@envoy//source/common/event:dispatcher_lib",
-        "@envoy//source/common/stats:isolated_store_lib",
-        "@envoy//source/common/stats:stats_lib",
-        "@envoy//source/extensions/common/crypto:utility_lib",
-        "@envoy//test/extensions/common/wasm/test_data:test_cpp_plugin",
-        "@envoy//test/test_common:simulated_time_system_lib",
     ],
 )
