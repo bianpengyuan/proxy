@@ -18,25 +18,15 @@
 #include <set>
 #include <unordered_map>
 
-#include "gtest/gtest.h"
-
-// WASM_PROLOG
-#ifndef NULL_PLUGIN
-#include "api/wasm/cpp/proxy_wasm_intrinsics.h"
-
-#else  // NULL_PLUGIN
-
 #include "common/buffer/buffer_impl.h"
 #include "common/http/message_impl.h"
 #include "common/stats/isolated_store_impl.h"
 #include "common/stream_info/stream_info_impl.h"
 #include "envoy/server/lifecycle_notifier.h"
-#include "extensions/common/wasm/wasm.h"
 #include "extensions/common/wasm/wasm_state.h"
 #include "extensions/filters/http/wasm/wasm_filter.h"
 #include "gmock/gmock.h"
 #include "gtest/gtest.h"
-#include "include/proxy-wasm/null_plugin.h"
 #include "test/mocks/grpc/mocks.h"
 #include "test/mocks/http/mocks.h"
 #include "test/mocks/network/mocks.h"
@@ -48,6 +38,7 @@
 #include "test/test_common/environment.h"
 #include "test/test_common/printers.h"
 #include "test/test_common/utility.h"
+#include "test/test_common/wasm_base.h"
 
 using testing::_;
 using testing::AtLeast;
@@ -67,7 +58,6 @@ using envoy::config::core::v3::TrafficDirection;
 using Envoy::Extensions::Common::Wasm::PluginSharedPtr;
 using Envoy::Extensions::Common::Wasm::Wasm;
 using Envoy::Extensions::Common::Wasm::WasmHandleSharedPtr;
-using Envoy::Extensions::Common::Wasm::WasmResult;
 using Envoy::Extensions::Common::Wasm::WasmState;
 using GrpcService = envoy::config::core::v3::GrpcService;
 using WasmFilterConfig = envoy::extensions::filters::http::wasm::v3::Wasm;
@@ -75,42 +65,25 @@ using WasmFilterConfig = envoy::extensions::filters::http::wasm::v3::Wasm;
 class TestFilter : public Envoy::Extensions::Common::Wasm::Context {
  public:
   TestFilter(Wasm* wasm, uint32_t root_context_id,
-             Envoy::Extensions::Common::Wasm::PluginSharedPtr plugin,
-             bool mock_logger = false)
-      : Envoy::Extensions::Common::Wasm::Context(wasm, root_context_id, plugin),
-        mock_logger_(mock_logger) {}
+             Envoy::Extensions::Common::Wasm::PluginSharedPtr plugin)
+      : Envoy::Extensions::Common::Wasm::Context(wasm, root_context_id,
+                                                 plugin) {}
 
-  void scriptLog(spdlog::level::level_enum level,
-                 absl::string_view message) override {
-    if (mock_logger_) {
-      scriptLog_(level, message);
-    }
-  }
-  MOCK_METHOD2(scriptLog_, void(spdlog::level::level_enum level,
-                                absl::string_view message));
-
- private:
-  bool mock_logger_;
+  MOCK_CONTEXT_LOG_;
 };
 
 class TestRoot : public Envoy::Extensions::Common::Wasm::Context {
  public:
-  TestRoot(bool mock_logger = false) : mock_logger_(mock_logger) {}
+  TestRoot() {}
 
-  void scriptLog(spdlog::level::level_enum level,
-                 absl::string_view message) override {
-    if (mock_logger_) {
-      scriptLog_(level, message);
-    }
-  }
-  MOCK_METHOD2(scriptLog_, void(spdlog::level::level_enum level,
-                                absl::string_view message));
-  WasmResult defineMetric(MetricType type, absl::string_view name,
+  MOCK_CONTEXT_LOG_;
+
+  WasmResult defineMetric(proxy_wasm::MetricType type, absl::string_view name,
                           uint32_t* metric_id_ptr) override {
     auto rs = Envoy::Extensions::Common::Wasm::Context::defineMetric(
         type, name, metric_id_ptr);
     metrics_[std::string(name)] = *metric_id_ptr;
-    scriptLog(spdlog::level::err, absl::StrCat(name, " = ", *metric_id_ptr));
+    log_(spdlog::level::err, absl::StrCat(name, " = ", *metric_id_ptr));
     return rs;
   }
 
@@ -125,7 +98,6 @@ class TestRoot : public Envoy::Extensions::Common::Wasm::Context {
   }
 
  private:
-  bool mock_logger_;
   std::map<std::string, uint32_t> metrics_;
 };
 
@@ -146,7 +118,6 @@ struct ConfigParams {
   std::string plugin_config_file;
   bool do_not_add_filter;
   std::string root_id;
-  bool mock_logger;
 };
 
 std::ostream& operator<<(std::ostream& os, const TestParams& s) {
@@ -175,7 +146,7 @@ class WasmHttpFilterTest : public testing::TestWithParam<TestParams> {
                     ? c.name
                     : readfile(params.testdata_dir + "/" + c.name);
 
-    root_context_ = new TestRoot(c.mock_logger);
+    root_context_ = new TestRoot();
     WasmFilterConfig proto_config;
     proto_config.mutable_config()->mutable_vm_config()->set_vm_id("vm_id");
     proto_config.mutable_config()->mutable_vm_config()->set_runtime(
@@ -185,14 +156,17 @@ class WasmHttpFilterTest : public testing::TestWithParam<TestParams> {
         ->mutable_code()
         ->mutable_local()
         ->set_inline_bytes(code);
-    proto_config.mutable_config()->set_configuration(c.plugin_config);
+    ProtobufWkt::StringValue plugin_configuration;
+    plugin_configuration.set_value(c.plugin_config);
+    proto_config.mutable_config()->mutable_configuration()->PackFrom(
+        plugin_configuration);
     Api::ApiPtr api = Api::createApiForTest(stats_store_);
     scope_ = Stats::ScopeSharedPtr(stats_store_.createScope("wasm."));
 
     auto vm_id = "";
     plugin_ = std::make_shared<Extensions::Common::Wasm::Plugin>(
-        c.name, c.root_id, vm_id, TrafficDirection::INBOUND, local_info_,
-        &listener_metadata_);
+        c.name, c.root_id, vm_id, c.plugin_config, TrafficDirection::INBOUND,
+        local_info_, &listener_metadata_);
     // creates a base VM
     // This is synchronous, even though it happens thru a callback due to null
     // vm.
@@ -205,20 +179,19 @@ class WasmHttpFilterTest : public testing::TestWithParam<TestParams> {
         [this](WasmHandleSharedPtr wasm) { wasm_ = wasm; });
     // wasm_ is set correctly
     // This will only call onStart.
-    auto config_status =
-        wasm_->wasm()->configure(root_context_, plugin_, c.plugin_config);
+    auto config_status = wasm_->wasm()->configure(root_context_, plugin_);
     if (!config_status) {
       throw EnvoyException("Configuration failed");
     }
     if (!c.do_not_add_filter) {
-      setupFilter(c.root_id, c.mock_logger);
+      setupFilter(c.root_id);
     }
   }
 
-  void setupFilter(const std::string root_id = "", bool mock_logger = false) {
+  void setupFilter(const std::string root_id = "") {
     filter_ = std::make_unique<TestFilter>(
         wasm_->wasm().get(), wasm_->wasm()->getRootContext(root_id)->id(),
-        plugin_, mock_logger);
+        plugin_);
     filter_->setDecoderFilterCallbacks(decoder_callbacks_);
     filter_->setEncoderFilterCallbacks(encoder_callbacks_);
 
@@ -282,15 +255,11 @@ class WasmHttpFilterTest : public testing::TestWithParam<TestParams> {
 
 }  // namespace Wasm
 }  // namespace HttpFilters
+
 namespace Common {
 namespace Wasm {
 namespace Null {
 namespace Plugin {
-
-#endif  // NULL_PLUGIN
-
-// END WASM_PROLOG
-
 namespace AttributeGen {
 using HttpFilters::Wasm::ConfigParams;
 using HttpFilters::Wasm::TestParams;
@@ -393,7 +362,7 @@ TEST_P(AttributeGenFilterTest, NoMatch) {
                     "match": [{"value":
                             "GetStatus", "condition": "request.url_path.startsWith('/status') && request.method == 'POST'"}]}]}
   )EOF";
-  setupConfig({.plugin_config = plugin_config, .mock_logger = false});
+  setupConfig({.plugin_config = plugin_config});
 
   Http::TestRequestHeaderMapImpl request_headers{{":path", "/status/207"},
                                                  {":method", "GET"}};
@@ -459,8 +428,7 @@ TEST_P(AttributeGenFilterTest, OperationFileGetNoMatch) {
 TEST_P(AttributeGenFilterTest, ResponseCodeFileMatch1) {
   const std::string attribute = "istio.responseClass";
 
-  setupConfig({.mock_logger = false,
-               .plugin_config_file =
+  setupConfig({.plugin_config_file =
                    "responseCode.json"});  // testdata/responseCode.json
 
   Http::TestRequestHeaderMapImpl request_headers{{":path", "/books"},
@@ -473,8 +441,7 @@ TEST_P(AttributeGenFilterTest, ResponseCodeFileMatch1) {
 TEST_P(AttributeGenFilterTest, ResponseCodeFileMatch2) {
   const std::string attribute = "istio.responseClass";
 
-  setupConfig({.mock_logger = false,
-               .plugin_config_file =
+  setupConfig({.plugin_config_file =
                    "responseCode.json"});  // testdata/responseCode.json
 
   Http::TestRequestHeaderMapImpl request_headers{{":path", "/books"},
@@ -487,8 +454,7 @@ TEST_P(AttributeGenFilterTest, ResponseCodeFileMatch2) {
 TEST_P(AttributeGenFilterTest, ResponseCodeFileMatch3) {
   const std::string attribute = "istio.responseClass";
 
-  setupConfig({.mock_logger = false,
-               .plugin_config_file =
+  setupConfig({.plugin_config_file =
                    "responseCode.json"});  // testdata/responseCode.json
 
   Http::TestRequestHeaderMapImpl request_headers{{":path", "/books"},

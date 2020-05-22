@@ -27,6 +27,7 @@
 #include "src/envoy/utils/filter_names.h"
 #include "src/envoy/utils/trace_headers.h"
 #include "test/integration/http_protocol_integration.h"
+#include "envoy/config/trace/v3/zipkin.pb.h"
 
 using ::google::protobuf::util::error::Code;
 using ::testing::Contains;

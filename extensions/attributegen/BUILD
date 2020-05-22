@@ -84,5 +84,15 @@ envoy_extension_cc_test(
         "@envoy//test/mocks/upstream:upstream_mocks",
         "@envoy//test/test_common:environment_lib",
         "@envoy//test/test_common:utility_lib",
+        "@envoy//test/test_common:wasm_lib",
+
+        "@envoy//source/common/common:hex_lib",
+        "@envoy//source/common/crypto:utility_lib",
+        "@envoy//source/common/event:dispatcher_lib",
+        "@envoy//source/common/stats:isolated_store_lib",
+        "@envoy//source/common/stats:stats_lib",
+        "@envoy//source/extensions/common/crypto:utility_lib",
+        "@envoy//test/extensions/common/wasm/test_data:test_cpp_plugin",
+        "@envoy//test/test_common:simulated_time_system_lib",
     ],
 )
