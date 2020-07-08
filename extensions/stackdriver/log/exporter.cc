@@ -51,7 +51,7 @@ ExporterImpl::ExporterImpl(
   auto failure_counter = Common::newExportCallMetric("logging", false);
   success_callback_ = [this, success_counter](size_t) {
     incrementMetric(success_counter, 1);
-    LOG_DEBUG("successfully sent Stackdriver logging request");
+    LOG_WARN("successfully sent Stackdriver logging request");
     in_flight_export_call_ -= 1;
     if (in_flight_export_call_ < 0) {
       LOG_WARN("in flight report call should not be negative");

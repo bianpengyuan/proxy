@@ -550,12 +550,18 @@ bool PluginRootContext::report(::Wasm::Common::RequestInfo& request_info,
                                bool is_tcp) {
   std::string peer_id;
   getValue({peer_metadata_id_key_}, &peer_id);
+  LOG_WARN("retrieved peer_id: " + peer_id);
 
   std::string peer;
   const ::Wasm::Common::FlatNode* peer_node =
       getValue({peer_metadata_key_}, &peer)
           ? flatbuffers::GetRoot<::Wasm::Common::FlatNode>(peer.data())
           : nullptr;
+  if (peer_node != nullptr) {
+    LOG_WARN("retrieved peer metadata: " + peer_node->name()->str() + "." + peer_node->namespace_()->str());
+  } else {
+    LOG_WARN("cannot retrieve peer metadata");
+  }
 
   // map and overwrite previous mapping.
   const ::Wasm::Common::FlatNode* destination_node_info =

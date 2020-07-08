@@ -330,7 +330,7 @@ void StackdriverRootContext::record() {
   if (enableEdgeReporting()) {
     std::string peer_id;
     if (!getValue({::Wasm::Common::kDownstreamMetadataIdKey}, &peer_id)) {
-      LOG_DEBUG(absl::StrCat(
+      LOG_WARN(absl::StrCat(
           "cannot get metadata for: ", ::Wasm::Common::kDownstreamMetadataIdKey,
           "; skipping edge."));
       return;
@@ -354,7 +354,7 @@ inline bool StackdriverRootContext::enableEdgeReporting() {
 bool StackdriverRootContext::shouldLogThisRequest() {
   std::string shouldLog = "";
   if (!getValue({::Wasm::Common::kAccessLogPolicyKey}, &shouldLog)) {
-    LOG_DEBUG("cannot get envoy access log info from filter state.");
+    LOG_WARN("cannot get envoy access log info from filter state.");
     return true;
   }
   return shouldLog != "no";

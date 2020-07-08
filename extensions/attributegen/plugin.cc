@@ -153,7 +153,7 @@ bool PluginRootContext::initAttributeGen(
         return false;
       }
       if (debug_) {
-        LOG_DEBUG(absl::StrCat(
+        LOG_WARN(absl::StrCat(
             "Added [", token, "] ", attribute_gen_config.output_attribute(),
             " if (", matchconfig.condition(), ") -> ", matchconfig.value()));
       }
@@ -201,7 +201,7 @@ void PluginRootContext::attributeGen(EvalPhase phase) {
     }
 
     if (debug_) {
-      LOG_DEBUG(absl::StrCat("Setting ", attribute_generator.outputAttribute(),
+      LOG_WARN(absl::StrCat("Setting ", attribute_generator.outputAttribute(),
                              " --> ", val));
     }
     setFilterState(attribute_generator.outputAttribute(), val);
