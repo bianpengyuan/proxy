@@ -23,10 +23,12 @@
 #ifndef NULL_PLUGIN
 #include "contrib/proxy_expr.h"
 #include "proxy_wasm_intrinsics.h"
+#include "src/envoy/extensions/wasm/opencensus/opencensus_wasm.h"
 
 #else  // NULL_PLUGIN
 
 #include "include/proxy-wasm/null_plugin.h"
+#include "src/envoy/extensions/wasm/opencensus/opencensus_null.h"
 
 namespace proxy_wasm {
 namespace null_plugin {
@@ -425,6 +427,14 @@ bool PluginRootContext::initializeDimensions(const json& j) {
 // Only policy plugins should return false.
 bool PluginRootContext::onConfigure(size_t size) {
   initialized_ = configure(size);
+  std::string tag = "test_label";
+  const char *tag_id_ptr = nullptr;
+  size_t tag_id_size = 0;
+  if (istio_opencensus_register_tag(tag.data(), tag.size(), &tag_id_ptr, &tag_id_size) != WasmResult::Ok) {
+    LOG_WARN("not ok!");
+  } else {
+    LOG_WARN("ok!");
+  }
   return true;
 }
 

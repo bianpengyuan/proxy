@@ -13,6 +13,9 @@
  * limitations under the License.
  */
 #include "extensions/common/wasm/wasm.h"
+#include "src/envoy/extensions/wasm/context.h"
+#include "src/envoy/extensions/wasm/opencensus/opencensus_context.h"
+#include "src/envoy/extensions/wasm/opencensus/opencensus_impl.h"
 
 #include "src/envoy/extensions/wasm/context.h"
 
@@ -58,6 +61,15 @@ class IstioWasm : public Wasm {
           this, std::static_pointer_cast<Plugin>(plugin));
     }
     return new IstioContext(this, std::static_pointer_cast<Plugin>(plugin));
+  }
+  void registerCallbacks() override {
+    Wasm::registerCallbacks();
+    #define _REGISTER(_fn)                                                                             \
+      wasm_vm_->registerCallback(                                                                      \
+          "env", "istio_" #_fn, &_fn,                                                                  \
+          &proxy_wasm::ConvertFunctionWordToUint32<decltype(_fn), _fn>::convertFunctionWordToUint32)
+      _REGISTER(istio_opencensus_register_tag);
+    #undef _REGISTER
   }
 };
 

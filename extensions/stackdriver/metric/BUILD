@@ -26,10 +26,12 @@ load(
 envoy_cc_library(
     name = "metric",
     srcs = [
+        "recorder.cc",
         "record.cc",
         "registry.cc",
     ],
     hdrs = [
+        "recorder.h",
         "record.h",
         "registry.h",
     ],
@@ -38,12 +40,19 @@ envoy_cc_library(
         "//extensions/stackdriver:__pkg__",
     ],
     deps = [
+        "//src/envoy/extensions/wasm/opencensus:opencensus_spec_cc_proto",
+        "//src/envoy/extensions/wasm/opencensus:opencensus_lib",
         "//extensions/common:context",
         "//extensions/stackdriver/common:constants",
         "//extensions/stackdriver/common:utils",
         "//extensions/stackdriver/config/v1alpha1:stackdriver_plugin_config_cc_proto",
         "@io_opencensus_cpp//opencensus/exporters/stats/stackdriver:stackdriver_exporter",
         "@io_opencensus_cpp//opencensus/stats",
+        "@proxy_wasm_cpp_host//:lib",
+        # "@proxy_wasm_cpp_host//:include",
+        # "@proxy_wasm_cpp_sdk//:common_lib",
+        # "@proxy_wasm_cpp_sdk//:api_lib",
+        # "//src/envoy/extensions/wasm:wasm_lib",
     ],
 )
 

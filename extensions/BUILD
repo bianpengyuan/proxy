@@ -37,9 +37,17 @@ wasm_cc_binary(
         "//extensions/stats:plugin.h",
     ],
     copts = ["-UNULL_PLUGIN"],
+    additional_linker_inputs = [
+        "@proxy_wasm_cpp_sdk//:jslib",
+        "//src/envoy/extensions/wasm:jslib",
+    ],
+    linkopts = [
+        "--js-library external/proxy_wasm_cpp_sdk/proxy_wasm_intrinsics.js --js-library src/envoy/extensions/wasm/istio_wasm_intrinsics.js",
+    ],
     deps = [
         "//extensions/common:json_util_wasm",
         "//extensions/common:node_info_fb_cc",
+        "//src/envoy/extensions/wasm/opencensus:opencensus_wasm",
         "//external:abseil_strings",
         "//external:abseil_time",
         "@proxy_wasm_cpp_sdk//:proxy_wasm_intrinsics",

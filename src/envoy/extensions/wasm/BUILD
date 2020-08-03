@@ -21,10 +21,7 @@ load(
 )
 
 envoy_cc_library(
-    name = "wasm_lib",
-    srcs = [
-        "wasm.cc",
-    ],
+    name = "context",
     hdrs = [
         "context.h",
     ],
@@ -33,4 +30,27 @@ envoy_cc_library(
     deps = [
         "@envoy//source/extensions/common/wasm:wasm_hdr",
     ],
+)
+
+envoy_cc_library(
+    name = "wasm_lib",
+    srcs = [
+        "wasm.cc",
+    ],
+    repository = "@envoy",
+    visibility = ["//visibility:public"],
+    deps = [
+        ":context",
+        "//src/envoy/extensions/wasm/opencensus:opencensus_lib",
+        "@envoy//source/extensions/common/wasm:wasm_hdr",
+    ],
+)
+
+
+filegroup(
+    name = "jslib",
+    srcs = [
+        "istio_wasm_intrinsics.js",
+    ],
+    visibility = ["//visibility:public"],
 )

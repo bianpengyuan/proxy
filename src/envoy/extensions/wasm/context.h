@@ -14,6 +14,9 @@
  */
 
 #pragma once
+
+#include "extensions/common/wasm/wasm.h"
+
 namespace Envoy {
 namespace Extensions {
 namespace Common {
@@ -31,6 +34,7 @@ class IstioContext : public Context {
       : Context(wasm, root_context_id, plugin) {}
   ~IstioContext() = default;
 };
+
 }  // namespace Istio
 }  // namespace Wasm
 }  // namespace Common
