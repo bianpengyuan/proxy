@@ -101,6 +101,8 @@ constexpr char kDefaultRootCertFile[] = "/etc/ssl/certs/ca-certificates.crt";
 // Stackdriver root context id.
 constexpr char kOutboundRootContextId[] = "stackdriver_outbound";
 constexpr char kInboundRootContextId[] = "stackdriver_inbound";
+constexpr char kOutboundTCPRootContextId[] = "stackdriver_outbound_tcp";
+constexpr char kInboundTCPRootContextId[] = "stackdriver_inbound_tcp";
 
 // Stackdriver service endpoint node metadata key.
 constexpr char kSecureStackdriverEndpointKey[] = "SECURE_STACKDRIVER_ENDPOINT";

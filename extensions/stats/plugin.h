@@ -377,6 +377,14 @@ static RegisterContextFactory register_StatsInbound(
     CONTEXT_FACTORY(Stats::PluginContext),
     ROOT_FACTORY(Stats::PluginRootContextInbound), "stats_inbound");
 
+static RegisterContextFactory register_StatsTCPOutbound(
+    CONTEXT_FACTORY(Stats::PluginContext),
+    ROOT_FACTORY(Stats::PluginRootContextOutbound), "stats_tcp_outbound");
+
+static RegisterContextFactory register_StatsTCPInbound(
+    CONTEXT_FACTORY(Stats::PluginContext),
+    ROOT_FACTORY(Stats::PluginRootContextInbound), "stats_tcp_inbound");
+
 }  // namespace Stats
 
 // WASM_EPILOG

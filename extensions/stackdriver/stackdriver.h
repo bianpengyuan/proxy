@@ -240,6 +240,14 @@ static RegisterContextFactory register_InboundStackdriverContext(
     CONTEXT_FACTORY(StackdriverContext),
     ROOT_FACTORY(StackdriverInboundRootContext),
     ::Extensions::Stackdriver::Common::kInboundRootContextId);
+static RegisterContextFactory register_OutboundTCPStackdriverContext(
+    CONTEXT_FACTORY(StackdriverContext),
+    ROOT_FACTORY(StackdriverOutboundRootContext),
+    ::Extensions::Stackdriver::Common::kOutboundTCPRootContextId);
+static RegisterContextFactory register_InboundTCPStackdriverContext(
+    CONTEXT_FACTORY(StackdriverContext),
+    ROOT_FACTORY(StackdriverInboundRootContext),
+    ::Extensions::Stackdriver::Common::kInboundTCPRootContextId);
 
 }  // namespace Stackdriver
 
