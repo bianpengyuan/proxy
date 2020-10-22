@@ -141,6 +141,69 @@ func enableStats(t *testing.T, vars map[string]string) {
 		driver.LoadTestData("testdata/filters/stats_outbound.yaml.tmpl")
 }
 
+func TestClusterMetadataCrash(t *testing.T) {
+	params := driver.NewTestParams(t, map[string]string{
+		"RequestCount":               "1",
+		"MetadataExchangeFilterCode": "inline_string: \"envoy.wasm.metadata_exchange\"",
+		"StatsFilterCode":            "inline_string: \"envoy.wasm.stats\"",
+		"WasmRuntime":                "envoy.wasm.runtime.null",
+		"StatsConfig":                driver.LoadTestData("testdata/bootstrap/stats.yaml.tmpl"),
+		"StatsFilterClientConfig":    "{}",
+		"StatsFilterServerConfig":    driver.LoadTestJSON("testdata/stats/server_config.yaml"),
+	}, envoye2e.ProxyE2ETests)
+	params.Vars["ClientMetadata"] = params.LoadTestData("testdata/client_node_metadata.json.tmpl")
+	params.Vars["ServerMetadata"] = params.LoadTestData("testdata/server_node_metadata.json.tmpl")
+	clientRequestTotal := &dto.MetricFamily{}
+	serverRequestTotal := &dto.MetricFamily{}
+	params.LoadTestProto("testdata/metric/client_request_total.yaml.tmpl", clientRequestTotal)
+	params.LoadTestProto("testdata/metric/server_request_total.yaml.tmpl", serverRequestTotal)
+	enableStats(t, params.Vars)
+
+	clientListenerTemplate := driver.LoadTestData("testdata/listener/client.yaml.tmpl")
+	serverListenerTemplate := driver.LoadTestData("testdata/listener/server.yaml.tmpl")
+
+	if err := (&driver.Scenario{
+		[]driver.Step{
+			&driver.XDS{},
+			&driver.Update{
+				Node:      "client", 
+				Version:   "0",
+				Listeners: []string{clientListenerTemplate},
+				Clusters:  []string{params.LoadTestData("testdata/cluster/server.yaml.tmpl")},
+			},
+			&driver.Update{Node: "server", Version: "0", Listeners: []string{serverListenerTemplate}},
+			&driver.Envoy{Bootstrap: params.LoadTestData("testdata/bootstrap/server.yaml.tmpl")},
+			&driver.Envoy{Bootstrap: params.LoadTestData("testdata/bootstrap/client.yaml.tmpl")},
+			&driver.Sleep{1 * time.Second},
+			driver.Get(params.Ports.ClientPort, "hello, world!"),
+			&driver.Repeat{
+				Duration: 1000 * time.Second,
+				Step: &driver.Scenario{
+					[]driver.Step{
+						&driver.Update{
+							Node:      "client",
+							Version:   "{{.N}}1",
+							Listeners: []string{clientListenerTemplate},
+							Clusters:  []string{params.LoadTestData("testdata/cluster/server.yaml.tmpl")},
+						},
+						// may need short delay so we don't eat all the CPU
+						&driver.Sleep{10 * time.Second},
+						&driver.Update{
+							Node:      "client",
+							Version:   "{{.N}}2",
+							Clusters:  []string{params.LoadTestData("testdata/cluster/server_new.yaml.tmpl")},
+						},
+						// may need short delay so we don't eat all the CPU
+						&driver.Sleep{10 * time.Second},
+					},
+				},
+			},
+		},
+	}).Run(params); err != nil {
+		t.Fatal(err)
+	}
+}
+
 func TestStatsPayload(t *testing.T) {
 	env.SkipTSanASan(t)
 	for _, testCase := range TestCases {
