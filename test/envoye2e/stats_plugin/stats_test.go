@@ -182,16 +182,9 @@ func TestClusterMetadataCrash(t *testing.T) {
 					[]driver.Step{
 						&driver.Update{
 							Node:      "client",
-							Version:   "{{.N}}1",
+							Version:   "{{.N}}",
 							Listeners: []string{clientListenerTemplate},
 							Clusters:  []string{params.LoadTestData("testdata/cluster/server.yaml.tmpl")},
-						},
-						// may need short delay so we don't eat all the CPU
-						&driver.Sleep{10 * time.Second},
-						&driver.Update{
-							Node:      "client",
-							Version:   "{{.N}}2",
-							Clusters:  []string{params.LoadTestData("testdata/cluster/server_new.yaml.tmpl")},
 						},
 						// may need short delay so we don't eat all the CPU
 						&driver.Sleep{10 * time.Second},
