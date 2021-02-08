@@ -91,7 +91,7 @@ func (e *Envoy) Run(p *Params) error {
 	args := []string{
 		"-c", e.tmpFile,
 		"-l", debugLevel,
-		"--concurrency", "1",
+		"--concurrency", "64",
 		"--disable-hot-restart",
 		"--drain-time-s", "4", // this affects how long draining listenrs are kept alive
 	}

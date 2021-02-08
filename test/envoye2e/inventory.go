@@ -70,6 +70,7 @@ func init() {
 			"TestStatsECDS/envoy.wasm.runtime.v8",
 			"TestStatsECDS/envoy.wasm.runtime.v8#01",
 			"TestHTTPLocalRatelimit",
+			"TestConfigUpdate",
 		},
 	}
 }
