@@ -25,7 +25,7 @@ filter_chains:
                 vm_id: test
                 runtime: envoy.wasm.runtime.v8
                 code:
-                  local: {  filename: /home/bianpengyuan_google_com/workspace/go/src/istio.io/proxy/basic-auth.wasm }
+                  local: {  filename: ./basic-auth.wasm }
                 allow_precompiled: true
               configuration:
                 "@type": "type.googleapis.com/google.protobuf.StringValue"
