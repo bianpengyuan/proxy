@@ -191,7 +191,6 @@ func TestStatsPayload(t *testing.T) {
 
 func TestConfigUpdate(t *testing.T) {
 	params := driver.NewTestParams(t, map[string]string{}, envoye2e.ProxyE2ETests)
-	params.Vars["ClientMetadata"] = params.LoadTestData("testdata/client_node_metadata.json.tmpl")
 	params.Vars["ServerMetadata"] = params.LoadTestData("testdata/server_node_metadata.json.tmpl")
 	enableStats(t, params.Vars)
 	if err := (&driver.Scenario{
@@ -200,13 +199,6 @@ func TestConfigUpdate(t *testing.T) {
 			&driver.Update{Node: "server", Version: "1", Listeners: []string{params.LoadTestData("test/envoye2e/stats_plugin/server1.yaml.tmpl")}},
 			&driver.Envoy{Bootstrap: params.LoadTestData("testdata/bootstrap/server.yaml.tmpl")},
 			&driver.Sleep{3 * time.Second},
-			&driver.Repeat{
-				N: 1,
-				Step: &driver.HTTPCall{
-					Port: params.Ports.ServerPort,
-					Body: "hello, world!",
-				},
-			},
 			&driver.Update{Node: "server", Version: "2", Listeners: []string{params.LoadTestData("test/envoye2e/stats_plugin/server2.yaml.tmpl")}},
 			&driver.Sleep{300 * time.Second},
 		},
