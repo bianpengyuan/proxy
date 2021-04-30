@@ -133,3 +133,33 @@ container_pull(
 load("//bazel:wasm.bzl", "wasm_dependencies")
 
 wasm_dependencies()
+
+http_archive(
+    name = "com_github_googleapis_googleapis",
+    strip_prefix = "googleapis-1d5522ad1056f16a6d593b8f3038d831e64daeea",  # Sept 03, 2020
+    url = "https://github.com/googleapis/googleapis/archive/1d5522ad1056f16a6d593b8f3038d831e64daeea.tar.gz",
+    sha256 = "cd13e547cffaad217c942084fd5ae0985a293d0cce3e788c20796e5e2ea54758",
+)
+
+# Bindings needed to allow envoy api build system to build cc proto.
+# Envoy will automatically look for `service_proto_cc_proto` instead of `service_cc_proto`.
+bind(
+    name = "service_proto",
+    actual = "@com_github_googleapis_googleapis//google/api:service_proto",
+)
+bind(
+    name = "service_proto_cc_proto",
+    actual = "@com_github_googleapis_googleapis//google/api:service_cc_proto",
+)
+
+SERVICE_CONTROL_CLIENT_GIT_SHA = "a4a960746cee29366ecfc7f194bc5cba6e11b5a1"
+SERVICE_CONTROL_CLIENT_SHA = "c2a0a5c5fe907361b6c004c8a2bae7d6dc5e9f1b8fcace8c44b0bd3eb6fb7325"
+
+http_archive(
+    name = "servicecontrol_client_git",
+    sha256 = SERVICE_CONTROL_CLIENT_SHA,
+    strip_prefix = "service-control-client-cxx-" + SERVICE_CONTROL_CLIENT_GIT_SHA,
+    urls = ["https://github.com/cloudendpoints/service-control-client-cxx/archive/" + SERVICE_CONTROL_CLIENT_GIT_SHA + ".tar.gz"],
+    #TODO(taoxuy): remove this mapping once Envoy googleapis_git is updated to use the version with servicecontrol_proto change
+    repo_mapping = {"@googleapis_git": "@com_github_googleapis_googleapis"},
+)

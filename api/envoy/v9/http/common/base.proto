@@ -1,0 +1,88 @@
+// Copyright 2019 Google LLC
+//
+// Licensed under the Apache License, Version 2.0 (the "License");
+// you may not use this file except in compliance with the License.
+// You may obtain a copy of the License at
+//
+//     http://www.apache.org/licenses/LICENSE-2.0
+//
+// Unless required by applicable law or agreed to in writing, software
+// distributed under the License is distributed on an "AS IS" BASIS,
+// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+// See the License for the specific language governing permissions and
+// limitations under the License.
+
+syntax = "proto3";
+
+package espv2.api.envoy.v9.http.common;
+
+import "google/protobuf/duration.proto";
+import "validate/validate.proto";
+
+message HttpUri {
+  // The uri string including the domain and path.
+  string uri = 1 [(validate.rules).string = {
+    // Must not be empty, at a minimum must be "/".
+    min_bytes: 1,
+    well_known_regex: HTTP_HEADER_VALUE,
+    strict: false
+  }];
+
+  // The Envoy cluster name required for Envoy to make a remote call.
+  string cluster = 2 [(validate.rules).string.min_bytes = 1];
+
+  // The timeout.
+  google.protobuf.Duration timeout = 3 [(validate.rules).duration = {
+    required: true,
+    gte: { seconds: 0 }
+  }];
+}
+
+message AccessToken {
+  reserved 2;
+
+  oneof token_type {
+    option (validate.required) = true;
+
+    // remote_token contains:
+    // - Token server uri. The Default is
+    //   http://metadata.google.internal/computeMetadata/v1/instance/service-accounts/default/identity
+    //   Query parameters are added by the filter
+    // - Token cluster address to fetch JWT token.
+    HttpUri remote_token = 1;
+  }
+}
+
+message IamTokenInfo {
+  // The Google Cloud IAM server uri.
+  espv2.api.envoy.v9.http.common.HttpUri iam_uri = 1;
+
+  // Information used to get access token.
+  espv2.api.envoy.v9.http.common.AccessToken access_token = 2;
+
+  // The Service Account Email.
+  string service_account_email = 3;
+
+  // The sequence of service accounts in a delegation chain.
+  repeated string delegates = 4;
+}
+
+// The behavior a filter will adhere to when waiting for external dependencies
+// during filter config.
+enum DependencyErrorBehavior {
+  // Uses the filter's default behavior.
+  UNSPECIFIED = 0;
+
+  // Treats all external dependencies as critical for proxy health.
+  // Any error will block proxy initialization. No error attribution occurs.
+  BLOCK_INIT_ON_ANY_ERROR = 1;
+
+  // Treats all external dependencies as optional.
+  // Proxy will always initialize, even if dependencies have errors.
+  // Note: This will result in API requests failing for routes that have
+  // dependency errors.
+  ALWAYS_INIT = 2;
+
+  // TODO(b/171326666): Does API Gateway need an option that blocks init based
+  // on error attribution?
+}

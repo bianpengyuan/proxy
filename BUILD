@@ -32,3 +32,9 @@ genrule(
     cmd = "echo $${ISTIO_VERSION:-\"0.3.0-dev\"} > \"$@\"",
     visibility = ["//visibility:public"],
 )
+
+filegroup(
+    name = "version",
+    srcs = ["VERSION"],
+    visibility = ["//:__subpackages__"],
+)

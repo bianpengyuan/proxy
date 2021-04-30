@@ -1,0 +1,120 @@
+// Copyright 2019 Google LLC
+//
+// Licensed under the Apache License, Version 2.0 (the "License");
+// you may not use this file except in compliance with the License.
+// You may obtain a copy of the License at
+//
+//     http://www.apache.org/licenses/LICENSE-2.0
+//
+// Unless required by applicable law or agreed to in writing, software
+// distributed under the License is distributed on an "AS IS" BASIS,
+// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+// See the License for the specific language governing permissions and
+// limitations under the License.
+
+syntax = "proto3";
+
+package espv2.api.envoy.v9.http.service_control;
+
+import "validate/validate.proto";
+
+// ApiKeyLocation defines the location to extract api key.
+//
+// See https://swagger.io/docs/specification/authentication/api-keys
+// for a general overview of API keys as defined by OpenAPI.
+message ApiKeyLocation {
+  oneof key {
+    option (validate.required) = true;
+
+    // API Key is sent as a query parameter. `query` represents the
+    // query string parameter name.
+    //
+    // For example, `query=api_key` should be used with the
+    // following request:
+    //
+    //     GET /something?api_key=abcdef12345
+    //
+    string query = 1 [(validate.rules).string = {
+      min_bytes: 1,
+      // Does not contain query params ('?', '&'), fragments ('#'), or invalid
+      // HTTP_HEADER_VALUE ('\r', '\n', '\0') characters.
+      pattern: '^[^?&#\\r\\n\\0]+$',
+    }];
+
+    // API key is sent in a request header. `header` represents the
+    // header name.
+    //
+    // For example, `header=X-API-KEY` should be used with the
+    // following request:
+    //
+    //     GET /something HTTP/1.1
+    //     X-API-Key: abcdef12345
+    //
+    string header = 2 [(validate.rules).string = {
+      min_bytes: 1,
+      well_known_regex: HTTP_HEADER_NAME
+    }];
+
+    // API key is sent in a
+    // [cookie](https://swagger.io/docs/specification/authentication/cookie-authentication),
+    //
+    // For example, `cookie=API-KEY` should be used for the
+    // following request:
+    //
+    //     GET /something HTTP/1.1
+    //     Cookie: API-KEY=abcdef12345
+    //
+    string cookie = 3 [(validate.rules).string = {
+      min_bytes: 1,
+      well_known_regex: HTTP_HEADER_VALUE
+    }];
+  }
+}
+
+message ApiKeyRequirement {
+  // The locations to extract the api_key. Only one api key is needed,
+  // if multiple locations are specified, the first api key is used.
+  // If the field is empty, default locations will be used.
+  // The default locations are: query parameters "key", "api_key", and header
+  // "x-api-key"
+  repeated ApiKeyLocation locations = 1;
+
+  // If true, to allow a request without api key and service control Check is
+  // not called.
+  bool allow_without_api_key = 2;
+}
+
+message MetricCost {
+  // The name of the metric cost
+  string name = 1;
+
+  // The cost of the metric cost
+  int64 cost = 2;
+}
+
+message Requirement {
+  // Refers to the service name in FilterConfig.services.service_name.
+  string service_name = 1 [(validate.rules).string.min_bytes = 1];
+
+  // The operation name.
+  string operation_name = 2 [(validate.rules).string.min_bytes = 1];
+
+  // API key related requirements.
+  ApiKeyRequirement api_key = 3;
+
+  // Custom labels.
+  repeated string custom_labels = 4;
+
+  // API name. Used for Chemist report request.
+  string api_name = 5;
+
+  // API version. Used for Chemist report request.
+  string api_version = 6;
+
+  // If true, the selected method should skip service control and the control
+  // plane features, such as quota and billing.
+  bool skip_service_control = 7;
+
+  // The metric costs for this selector.
+  repeated MetricCost metric_costs = 8;
+}

@@ -1,0 +1,124 @@
+apiVersion: networking.istio.io/v1alpha3
+kind: EnvoyFilter
+metadata:
+  name: metadata-cluster
+  namespace: istio-system
+spec:
+  configPatches:
+  - applyTo: CLUSTER
+    patch:
+      operation: ADD
+      value:
+        name: metadata-cluster
+        type: STRICT_DNS
+        connect_timeout: 20s
+        load_assignment:
+          cluster_name: 169.254.169.254
+          endpoints:
+          - lb_endpoints:
+            - endpoint:
+                address:
+                  socket_address:
+                    address: 169.254.169.254
+                    port_value: 80
+---
+apiVersion: networking.istio.io/v1alpha3
+kind: EnvoyFilter
+metadata:
+  name: service-control-cluster
+  namespace: istio-system
+spec:
+  configPatches:
+  - applyTo: CLUSTER
+    patch:
+      operation: ADD
+      value:
+        connectTimeout: 5s
+        dnsLookupFamily: V4_ONLY
+        loadAssignment:
+          clusterName: servicecontrol.googleapis.com
+          endpoints:
+          - lbEndpoints:
+            - endpoint:
+                address:
+                  socketAddress:
+                    address: servicecontrol.googleapis.com
+                    portValue: 443
+        name: service-control-cluster
+        transportSocket:
+          name: envoy.transport_sockets.tls
+          typedConfig:
+            "@type": type.googleapis.com/envoy.extensions.transport_sockets.tls.v3.UpstreamTlsContext
+            commonTlsContext:
+              validationContext:
+                trustedCa:
+                  filename: "/etc/ssl/certs/ca-certificates.crt"
+            sni: servicecontrol.googleapis.com
+        type: LOGICAL_DNS
+---
+apiVersion: networking.istio.io/v1alpha3
+kind: EnvoyFilter
+metadata:
+  name: quota
+  namespace: istio-system
+spec:
+  configPatches:
+  - applyTo: HTTP_FILTER
+    match:
+      context: GATEWAY
+      listener:
+        filterChain:
+          filter:
+            name: envoy.filters.network.http_connection_manager
+      proxy:
+        proxyVersion: ^1\.10.*
+    patch:
+      operation: INSERT_BEFORE
+      value:
+        name: com.google.espv2.filters.http.service_control
+        typed_config:
+          '@type': type.googleapis.com/udpa.type.v1.TypedStruct
+          type_url: type.googleapis.com/espv2.api.envoy.v9.http.service_control.FilterConfig
+          value:
+            generated_header_prefix: "X-Endpoint-"
+            imds_token:
+              cluster: metadata-cluster
+              timeout: 30s
+              uri: http://169.254.169.254/computeMetadata/v1/instance/service-accounts/default/token
+            requirements:
+            - apiKey:
+                allow_without_api_key: true
+              api_name: 1.library_global_service_mixologist_142215_cloud_goog
+              api_version: 1.0.0
+              skip_service_control: true
+              metric_costs:
+              - cost: '1'
+                name: GET_PRODUCTS
+              operation_name: 1.library_global_service_mixologist_142215_cloud_goog.GetProducts
+              service_name: library.global.service.mixologist-142215.cloud.goog
+            service_control_uri:
+              cluster: service-control-cluster
+              timeout: 30s
+              uri: https://servicecontrol.googleapis.com/v1/services
+            services:
+            - backend_protocol: http1
+              producer_project_id: mixologist-142215
+              service_config_id: 2021-04-29r1
+              service_name: library.global.service.mixologist-142215.cloud.goog
+  - applyTo: HTTP_ROUTE
+    match:
+      context: GATEWAY
+      routeConfiguration:
+        vhost:
+          name: "*:80"
+          route:
+            action: ANY
+    patch:
+      operation: MERGE
+      value:
+        typed_per_filter_config:
+          com.google.espv2.filters.http.service_control:
+            "@type": type.googleapis.com/udpa.type.v1.TypedStruct
+            type_url: type.googleapis.com/espv2.api.envoy.v9.http.service_control.PerRouteFilterConfig
+            value:
+              operation_name: 1.library_global_service_mixologist_142215_cloud_goog.GetProducts
