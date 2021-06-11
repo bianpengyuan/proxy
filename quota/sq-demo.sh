@@ -1,0 +1,5 @@
+curl "https://servicemanagement.googleapis.com/v1/services" -X POST -H "Authorization: Bearer $(gcloud auth print-access-token)"   -H "Content-Type: application/json" -d '{"serviceName": "bpy-test-service-0513-1.global.service.mixologist-142215.cloud.goog", "producerProjectId": "mixologist-142215"}'
+
+curl "https://servicemanagement.googleapis.com/v1/services/bpy-test-service-0513-1.global.service.mixologist-142215.cloud.goog/configs" -X POST -H "Authorization: Bearer $(gcloud auth print-access-token)"   -H "Content-Type: application/json" -d @./quota/sq-service-config.json
+
+curl "https://servicemanagement.googleapis.com/v1/services/bpy-test-service-0513-1.global.service.mixologist-142215.cloud.goog/rollouts" -X POST -H "Authorization: Bearer $(gcloud auth print-access-token)" -H "Content-Type: application/json" -d @./quota/sq-service-config-rollout.json

@@ -1,0 +1,30 @@
+{
+    "configVersion": 3,
+    "name": "bpy-test-service-0513-1.global.service.mixologist-142215.cloud.goog",
+    "title": "bianpengyuan test service 2",
+    "producerProjectId": "mixologist-142215",
+    "control": {
+      "environment": "servicecontrol.googleapis.com"
+    },
+    "metrics": [
+      {
+        "name": "bpy-test-service-0513-1.global.service.mixologist-142215.cloud.goog/app_requests",
+        "metricKind": "DELTA",
+        "valueType": "INT64",
+        "displayName": "app requests"
+      }
+    ],
+    "quota": {
+        "limits": [
+            {
+                "name": "RequestsPerAppPerMinute",
+                "displayName": "Requests per app per minute",
+                "metric": "bpy-test-service-0513-1.global.service.mixologist-142215.cloud.goog/app_requests",
+                "unit": "1/min/{project}",
+                "values": {
+                    "STANDARD": "1200"
+                }
+            }
+        ]
+    }
+}

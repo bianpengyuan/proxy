@@ -1,0 +1,8 @@
+{
+  "rolloutId": "2021-05-12r0",
+  "trafficPercentStrategy": {
+    "percentages": {
+      "2021-05-12r0": 100.00
+    }
+  }
+}
